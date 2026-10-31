@@ -381,18 +381,9 @@ OK
 
 ---
 
-## 14. Relevant Technical Skills & Keywords (Resume Alignment)
 
-- **Backend Development:** Python 3.12, Django 5.1, Django ORM, REST-style AJAX endpoints, CSRF protection, Session authentication.
-- **Database Engineering:** PostgreSQL, schema normalization, multi-tenant isolation, unique constraints, foreign keys, database migrations.
-- **Frontend & UX:** Semantic HTML5, Custom Properties CSS, Inter typography, responsive layouts, Vanilla JavaScript (ES6+), Chart.js data visualization.
-- **Data Processing:** Pandas, OpenPyXL, CSV streaming, analytical aggregations, conversion funnel modeling.
-- **Quality Assurance & Testing:** Django TestCase, automated regression testing, integration testing, boundary validation, security audits.
-- **Developer Experience:** Windows batch scripting (`setup.bat`, `run.bat`, `test.bat`), virtual environment management, deployment readiness.
 
----
-
-## 15. License & Attribution
+## 14. License & Attribution
 
 This project is open-source software licensed under the [MIT License](LICENSE).  
 Developed as part of the **90 Days – 90 Projects Challenge** by **Ragu Ram P**.
