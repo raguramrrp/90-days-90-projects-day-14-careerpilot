@@ -1,0 +1,354 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Overview — CareerPilot{% endblock %}
+{% block page_title %}Career Command Center{% endblock %}
+
+{% block content %}
+<!-- Top Context Banner -->
+<div class="card" style="margin-bottom: 20px; padding: 18px 20px; background: var(--bg-surface); border-left: 4px solid var(--primary-accent);">
+  <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+    <div>
+      <h1 style="font-size: 19px; font-weight: 700; color: var(--text-primary); margin-bottom: 3px;">
+        Good day, {{ request.user.first_name|default:request.user.username }}
+      </h1>
+      <p style="font-size: 12.5px; color: var(--text-secondary);">
+        {{ today|date:"l, F j, Y" }} &bull; 
+        {% if kpis.upcoming_interviews > 0 %}
+          <strong>{{ kpis.upcoming_interviews }}</strong> interview round(s) scheduled.
+        {% else %}
+          Keep advancing applications and refining your technical preparation.
+        {% endif %}
+      </p>
+    </div>
+    <div style="display: flex; gap: 8px;">
+      <a href="{% url 'core:my_day' %}" class="btn btn-secondary btn-sm" style="font-weight: 600;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span>Open My Day</span>
+      </a>
+      <a href="{% url 'applications:create' %}" class="btn btn-primary btn-sm">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+        <span>Track Application</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- KPI Metrics Row -->
+<div class="grid-4" style="margin-bottom: 20px;">
+  <div class="kpi-card">
+    <div class="kpi-label">Opportunities Saved</div>
+    <div class="kpi-value">{{ kpis.total_opportunities }}</div>
+    <div class="kpi-subtext"><a href="{% url 'opportunities:list' %}" style="color: inherit; text-decoration: none;">View all tracked roles &rarr;</a></div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-label">Active Applications</div>
+    <div class="kpi-value">{{ kpis.in_progress }} <span style="font-size: 13px; font-weight: 400; color: var(--text-muted);">/ {{ kpis.total_applications }} total</span></div>
+    <div class="kpi-subtext"><a href="{% url 'applications:kanban' %}" style="color: inherit; text-decoration: none;">Open pipeline board &rarr;</a></div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-label">Upcoming Interviews</div>
+    <div class="kpi-value" style="color: var(--primary-accent);">{{ kpis.upcoming_interviews }}</div>
+    <div class="kpi-subtext"><a href="{% url 'interviews:list' %}" style="color: inherit; text-decoration: none;">Review prep & questions &rarr;</a></div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-label">Offers & Conversion</div>
+    <div class="kpi-value" style="color: var(--color-success);">{{ kpis.offers_received }} <span style="font-size: 13px; font-weight: 400; color: var(--text-muted);">({{ kpis.offer_conversion_rate }}%)</span></div>
+    <div class="kpi-subtext">{{ kpis.offers_accepted }} accepted offer(s)</div>
+  </div>
+</div>
+
+<!-- Charts Section -->
+<div class="grid-2" style="margin-bottom: 20px;">
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Application Pipeline Stages</h2>
+      <span class="card-subtitle">Active funnel distribution</span>
+    </div>
+    <div style="height: 220px; position: relative;">
+      <canvas id="chart-pipeline"></canvas>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Monthly Activity Trend</h2>
+      <span class="card-subtitle">Applications submitted vs. interviews held</span>
+    </div>
+    <div style="height: 220px; position: relative;">
+      <canvas id="chart-activity"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Asymmetric Main Grid: Left 2fr, Right 1fr -->
+<div class="grid-asymmetric">
+  <!-- Left Side: Deadlines, Tasks, Interviews -->
+  <div>
+    <!-- Upcoming Deadlines -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Approaching Application Deadlines</h2>
+        <a href="{% url 'opportunities:list' %}" class="btn btn-secondary btn-sm">View All</a>
+      </div>
+      {% if upcoming_deadlines %}
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Opportunity</th>
+              <th>Company</th>
+              <th>Deadline</th>
+              <th>Priority</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for opp in upcoming_deadlines %}
+            <tr>
+              <td style="font-weight: 600;">
+                <a href="{% url 'opportunities:detail' opp.pk %}" style="color: inherit; text-decoration: none;">{{ opp.title }}</a>
+              </td>
+              <td>{{ opp.company.name }}</td>
+              <td>
+                {% if opp.is_deadline_approaching %}
+                  <span class="badge badge-red">{{ opp.deadline|date:"M d, Y" }} (Soon)</span>
+                {% else %}
+                  {{ opp.deadline|date:"M d, Y" }}
+                {% endif %}
+              </td>
+              <td>
+                <span class="badge {% if opp.priority == 'Urgent' %}badge-red{% elif opp.priority == 'High' %}badge-amber{% else %}badge-slate{% endif %}">
+                  {{ opp.priority }}
+                </span>
+              </td>
+              <td>
+                <a href="{% url 'applications:create' %}?opportunity_id={{ opp.pk }}" class="btn btn-primary btn-sm">Apply</a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p style="font-size: 12px; color: var(--text-muted); padding: 12px 0;">No upcoming opportunity deadlines within the next 7 days.</p>
+      {% endif %}
+    </div>
+
+    <!-- Today's Career Tasks -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Today's Career Tasks</h2>
+        <a href="{% url 'planner:task_create' %}" class="btn btn-secondary btn-sm">+ Add Task</a>
+      </div>
+      {% if todays_tasks %}
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        {% for task in todays_tasks %}
+        <div id="task-row-{{ task.pk }}" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: var(--bg-muted); border-radius: var(--radius-sm); {% if task.is_completed %}opacity: 0.5; text-decoration: line-through;{% endif %}">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <input type="checkbox" class="task-toggle-checkbox form-checkbox" data-task-id="{{ task.pk }}" {% if task.is_completed %}checked{% endif %}>
+            <div>
+              <div style="font-weight: 500; font-size: 12.5px;">{{ task.title }}</div>
+              <div style="font-size: 11px; color: var(--text-muted);">{{ task.category }} &bull; Priority: {{ task.priority }}</div>
+            </div>
+          </div>
+          <span class="badge badge-slate">{{ task.due_date|date:"M d" }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p style="font-size: 12px; color: var(--text-muted); padding: 12px 0;">No tasks scheduled for today. Add one in the planner to keep daily momentum.</p>
+      {% endif %}
+    </div>
+
+    <!-- Upcoming Interviews -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Scheduled Interviews</h2>
+        <a href="{% url 'interviews:list' %}" class="btn btn-secondary btn-sm">All Rounds</a>
+      </div>
+      {% if upcoming_interviews %}
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        {% for intv in upcoming_interviews %}
+        <div style="padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-surface); display: flex; align-items: center; justify-content: space-between;">
+          <div>
+            <div style="font-weight: 600; font-size: 13px; color: var(--text-primary);">
+              {{ intv.application.opportunity.company.name }} &mdash; {{ intv.round_title }}
+            </div>
+            <div style="font-size: 11.5px; color: var(--text-secondary); margin-top: 2px;">
+              Date: <strong>{{ intv.interview_date|date:"D, M d" }}</strong> {% if intv.interview_time %}at {{ intv.interview_time|time:"H:i" }}{% endif %} &bull; Mode: {{ intv.mode }}
+            </div>
+          </div>
+          <div style="display: flex; gap: 6px;">
+            {% if intv.meeting_url %}
+              <a href="{{ intv.meeting_url }}" target="_blank" rel="noreferrer" class="btn btn-secondary btn-sm">Join</a>
+            {% endif %}
+            <a href="{% url 'interviews:detail' intv.pk %}" class="btn btn-primary btn-sm">Prep Checklist</a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p style="font-size: 12px; color: var(--text-muted); padding: 12px 0;">No upcoming interviews scheduled currently.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Right Side: Recommendations, Weekly Goals, Activity -->
+  <div>
+    <!-- Career Recommendations -->
+    <div class="card" style="border-top: 3px solid var(--primary-accent);">
+      <div class="card-header">
+        <h2 class="card-title">Career Intelligence</h2>
+        <span class="badge badge-blue">Rule-Based</span>
+      </div>
+      {% if recommendations %}
+        {% for rec in recommendations %}
+        <div class="rec-item {% if rec.priority == 'Urgent' %}urgent{% elif rec.priority == 'High' %}high{% endif %}">
+          <div class="rec-header">
+            <span class="rec-title">{{ rec.title }}</span>
+            <span class="badge {% if rec.priority == 'Urgent' %}badge-red{% elif rec.priority == 'High' %}badge-amber{% else %}badge-blue{% endif %}">
+              {{ rec.badge }}
+            </span>
+          </div>
+          <div class="rec-reason">{{ rec.reason }}</div>
+          <div class="rec-action">
+            <span style="font-size: 11px; color: var(--text-muted);">{{ rec.suggested_action }}</span>
+            <a href="{{ rec.action_url }}" class="btn btn-secondary btn-sm" style="font-size: 11px; padding: 2px 7px;">Action</a>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+      <p style="font-size: 12px; color: var(--text-muted); padding: 10px 0;">All current opportunities and applications are healthy with no urgent actions required.</p>
+      {% endif %}
+    </div>
+
+    <!-- Weekly Goals Progress -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Weekly Goals</h2>
+        <a href="{% url 'planner:task_list' %}" class="btn btn-secondary btn-sm">+ Goal</a>
+      </div>
+      {% if weekly_goals %}
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        {% for goal in weekly_goals %}
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+            <span style="font-weight: 500;">{{ goal.title }}</span>
+            <span style="font-weight: 600; color: var(--primary-accent);">{{ goal.current_progress }} / {{ goal.target_count }}</span>
+          </div>
+          <div style="width: 100%; height: 6px; background: var(--bg-muted); border-radius: 3px; overflow: hidden;">
+            <div style="width: {{ goal.progress_percentage }}%; height: 100%; background: {% if goal.is_achieved %}var(--color-success){% else %}var(--primary-accent){% endif %};"></div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p style="font-size: 12px; color: var(--text-muted); padding: 10px 0;">No weekly goals active for this period.</p>
+      {% endif %}
+    </div>
+
+    <!-- Recent History Timeline -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Recent Pipeline Activity</h2>
+      </div>
+      {% if recent_history %}
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        {% for hist in recent_history %}
+        <div style="font-size: 12px; padding: 6px 0; border-bottom: 1px solid var(--border-subtle);">
+          <div style="font-weight: 600;">
+            {{ hist.application.opportunity.company.name }} &mdash; <span style="color: var(--primary-accent);">{{ hist.new_status }}</span>
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 1px;">
+            {{ hist.changed_at|date:"M d, H:i" }} &bull; {{ hist.notes|truncatechars:45 }}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p style="font-size: 12px; color: var(--text-muted); padding: 10px 0;">No status changes recorded yet.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof Chart === 'undefined') return;
+
+  // Pipeline stages chart
+  const pipelineCtx = document.getElementById('chart-pipeline');
+  if (pipelineCtx) {
+    const pipelineData = {{ charts_data.pipeline_distribution|safe }};
+    new Chart(pipelineCtx, {
+      type: 'bar',
+      data: {
+        labels: pipelineData.labels,
+        datasets: [{
+          label: 'Applications',
+          data: pipelineData.data,
+          backgroundColor: '#2869C7',
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, ticks: { precision: 0, font: { size: 11 } } },
+          x: { ticks: { font: { size: 10 }, maxRotation: 45, minRotation: 45 } }
+        }
+      }
+    });
+  }
+
+  // Monthly activity chart
+  const activityCtx = document.getElementById('chart-activity');
+  if (activityCtx) {
+    const actData = {{ charts_data.activity_trend|safe }};
+    new Chart(activityCtx, {
+      type: 'line',
+      data: {
+        labels: actData.labels,
+        datasets: [
+          {
+            label: 'Applications',
+            data: actData.applications,
+            borderColor: '#2869C7',
+            backgroundColor: 'rgba(40, 105, 199, 0.1)',
+            fill: true,
+            tension: 0.3
+          },
+          {
+            label: 'Interviews',
+            data: actData.interviews,
+            borderColor: '#16856B',
+            backgroundColor: 'transparent',
+            borderDash: [5, 5],
+            tension: 0.3
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top', labels: { font: { size: 11 } } }
+        },
+        scales: {
+          y: { beginAtZero: true, ticks: { precision: 0, font: { size: 11 } } },
+          x: { ticks: { font: { size: 11 } } }
+        }
+      }
+    });
+  }
+});
+</script>
+{% endblock %}

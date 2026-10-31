@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} — CareerPilot{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+    <div>
+      <h1 style="font-size: 20px; font-weight: 700; color: var(--text-primary);">{{ title }}</h1>
+      <p style="font-size: 12.5px; color: var(--text-secondary);">Set round logistics, prep topics, or record post-interview review notes.</p>
+    </div>
+    <a href="{% url 'interviews:list' %}" class="btn btn-secondary btn-sm">Cancel</a>
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+
+    <!-- 1. Round & Application -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">1. Application & Round Details</h2>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Related Application *</label>
+          {{ form.application }}
+          {{ form.application.errors }}
+        </div>
+        <div class="form-group" style="max-width: 130px;">
+          <label class="form-label">Round Number</label>
+          {{ form.round_number }}
+          {{ form.round_number.errors }}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Round Title *</label>
+        {{ form.round_title }}
+        {{ form.round_title.errors }}
+      </div>
+    </div>
+
+    <!-- 2. Date, Time & Logistics -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">2. Timing & Logistics</h2>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Interview Date *</label>
+          {{ form.interview_date }}
+          {{ form.interview_date.errors }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Interview Time</label>
+          {{ form.interview_time }}
+          {{ form.interview_time.errors }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Interview Mode</label>
+          {{ form.mode }}
+          {{ form.mode.errors }}
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Meeting URL (Google Meet / Zoom / Teams)</label>
+          {{ form.meeting_url }}
+          {{ form.meeting_url.errors }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Physical Location (if offline)</label>
+          {{ form.location }}
+          {{ form.location.errors }}
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Interviewer Names</label>
+          {{ form.interviewer_names }}
+          {{ form.interviewer_names.errors }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Interviewer Designations / Roles</label>
+          {{ form.interviewer_titles }}
+          {{ form.interviewer_titles.errors }}
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Preparation Strategy -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">3. Preparation Focus & Concepts</h2>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Topics to Prepare</label>
+        {{ form.topics_to_prepare }}
+        {{ form.topics_to_prepare.errors }}
+      </div>
+      <div class="form-group">
+        <label class="form-label">Personal Preparation Strategy</label>
+        {{ form.preparation_notes }}
+        {{ form.preparation_notes.errors }}
+      </div>
+    </div>
+
+    <!-- 4. Post-Interview Debrief & Evaluation -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">4. Post-Interview Evaluation (Optional upon creation)</h2>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Round Outcome</label>
+          {{ form.outcome }}
+          {{ form.outcome.errors }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Next Round Date (if advanced)</label>
+          {{ form.next_round_date }}
+          {{ form.next_round_date.errors }}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Questions Asked by Interviewers</label>
+        {{ form.questions_asked }}
+        {{ form.questions_asked.errors }}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Your Technical Approaches & Answers</label>
+        {{ form.personal_answers }}
+        {{ form.personal_answers.errors }}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Interviewer Feedback</label>
+        {{ form.feedback }}
+        {{ form.feedback.errors }}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Concepts / Areas Requiring Improvement</label>
+        {{ form.areas_to_improve }}
+        {{ form.areas_to_improve.errors }}
+      </div>
+    </div>
+
+    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px;">
+      <a href="{% url 'interviews:list' %}" class="btn btn-secondary">Cancel</a>
+      <button type="submit" class="btn btn-primary" style="padding: 8px 20px;">Save Interview Round</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

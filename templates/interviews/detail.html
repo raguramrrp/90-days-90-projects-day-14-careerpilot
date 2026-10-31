@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ interview.application.opportunity.company.name }} — {{ interview.round_title }} — CareerPilot{% endblock %}
+{% block page_title %}Interview Preparation & Debrief{% endblock %}
+
+{% block content %}
+<div style="max-width: 900px; margin: 0 auto;">
+  <!-- Header Bar -->
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+        <span class="badge {% if interview.outcome == 'Passed' %}badge-green{% elif interview.outcome == 'Failed' %}badge-red{% elif interview.outcome == 'Scheduled' %}badge-blue{% else %}badge-slate{% endif %}" style="font-size: 12px; padding: 3px 8px;">
+          {{ interview.outcome }}
+        </span>
+        <span class="badge badge-slate">Round {{ interview.round_number }}</span>
+        {% if interview.is_today %}
+          <span class="badge badge-red">TODAY</span>
+        {% endif %}
+      </div>
+
+      <h1 style="font-size: 22px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px;">
+        {{ interview.round_title }}
+      </h1>
+      <div style="font-size: 13.5px; color: var(--text-secondary);">
+        <strong>{{ interview.application.opportunity.company.name }}</strong> &bull; {{ interview.application.opportunity.title }}
+        &bull; <a href="{% url 'applications:detail' interview.application.pk %}" style="color: var(--primary-accent); text-decoration: none;">View Application &nearr;</a>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 8px;">
+      {% if interview.meeting_url %}
+        <a href="{{ interview.meeting_url }}" target="_blank" rel="noreferrer" class="btn btn-primary btn-sm">Join Video Call &nearr;</a>
+      {% endif %}
+      <a href="{% url 'interviews:update' interview.pk %}" class="btn btn-secondary btn-sm">Edit Details</a>
+      <a href="{% url 'interviews:delete' interview.pk %}" class="btn btn-secondary btn-sm" style="color: var(--color-danger);">Delete</a>
+    </div>
+  </div>
+
+  <div class="grid-asymmetric">
+    <!-- Left Column: Details & Checklist -->
+    <div>
+      <!-- Time & Logistics Card -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Schedule & Logistics</h2>
+        </div>
+        <div class="grid-2" style="font-size: 12.5px; margin-bottom: 12px;">
+          <div>
+            <div style="color: var(--text-muted); font-size: 11px;">Interview Date</div>
+            <div style="font-weight: 600;">{{ interview.interview_date|date:"l, F j, Y" }}</div>
+          </div>
+          <div>
+            <div style="color: var(--text-muted); font-size: 11px;">Interview Time</div>
+            <div style="font-weight: 600;">{{ interview.interview_time|time:"H:i A"|default:"Time not specified" }}</div>
+          </div>
+          <div>
+            <div style="color: var(--text-muted); font-size: 11px;">Mode</div>
+            <div>{{ interview.mode }}</div>
+          </div>
+          <div>
+            <div style="color: var(--text-muted); font-size: 11px;">Location / Meeting Link</div>
+            <div>
+              {% if interview.meeting_url %}
+                <a href="{{ interview.meeting_url }}" target="_blank" rel="noreferrer" style="color: var(--primary-accent);">{{ interview.meeting_url|truncatechars:35 }}</a>
+              {% else %}
+                {{ interview.location|default:"Online call / TBD" }}
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        {% if interview.interviewer_names %}
+        <div style="padding-top: 10px; border-top: 1px solid var(--border-subtle); font-size: 12px;">
+          <strong>Interviewer(s):</strong> {{ interview.interviewer_names }}
+          {% if interview.interviewer_titles %}({{ interview.interviewer_titles }}){% endif %}
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Preparation Checklist Card -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">Preparation Checklist</h2>
+            <div id="checklist-progress-text" style="font-size: 11.5px; color: var(--text-secondary); margin-top: 2px;">
+              Check off items as you prepare
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;">
+          {% for item in checklist %}
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: var(--bg-muted); border-radius: var(--radius-sm);">
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 12.5px;">
+              <input type="checkbox" class="checklist-toggle-checkbox form-checkbox" data-item-id="{{ item.pk }}" {% if item.is_completed %}checked{% endif %}>
+              <span id="checklist-label-{{ item.pk }}" style="{% if item.is_completed %}text-decoration: line-through; color: var(--text-muted);{% endif %}">
+                {{ item.item_text }}
+              </span>
+            </label>
+          </div>
+          {% endfor %}
+        </div>
+
+        <!-- Add Custom Checklist Item -->
+        <form method="post" action="{% url 'interviews:add_checklist_item' interview.pk %}" style="display: flex; gap: 6px;">
+          {% csrf_token %}
+          <div style="flex: 1;">
+            {{ item_form.item_text }}
+          </div>
+          <button type="submit" class="btn btn-secondary btn-sm">+ Add Item</button>
+        </form>
+      </div>
+
+      <!-- Technical Topics & Preparation Notes -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Topics to Prepare & Strategy Notes</h2>
+        </div>
+        {% if interview.topics_to_prepare %}
+        <div style="margin-bottom: 12px;">
+          <div style="color: var(--text-muted); font-size: 11px; margin-bottom: 4px;">Target Concepts / Questions</div>
+          <div style="font-size: 12.5px; line-height: 1.5; white-space: pre-line;">{{ interview.topics_to_prepare }}</div>
+        </div>
+        {% endif %}
+
+        {% if interview.preparation_notes %}
+        <div style="padding-top: 10px; border-top: 1px solid var(--border-subtle);">
+          <div style="color: var(--text-muted); font-size: 11px; margin-bottom: 4px;">Personal Notes</div>
+          <div style="font-size: 12.5px; line-height: 1.5; white-space: pre-line; color: var(--text-secondary);">{{ interview.preparation_notes }}</div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Right Column: Post-Interview Debrief -->
+    <div>
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Post-Interview Debrief</h2>
+          <a href="{% url 'interviews:update' interview.pk %}" class="btn btn-secondary btn-sm">Edit Debrief</a>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 12px; font-size: 12px;">
+          <div>
+            <div style="color: var(--text-muted); font-size: 11px;">Current Outcome</div>
+            <div style="font-weight: 600; font-size: 13px;">{{ interview.outcome }}</div>
+          </div>
+
+          {% if interview.feedback %}
+          <div>
+            <div style="color: var(--text-muted); font-size: 11px;">Interviewer / Recruiter Feedback</div>
+            <div style="line-height: 1.5; white-space: pre-line;">{{ interview.feedback }}</div>
+          </div>
+          {% endif %}
+
+          {% if interview.questions_asked %}
+          <div>
+            <div style="color: var(--text-muted); font-size: 11px;">Specific Questions Asked</div>
+            <div style="line-height: 1.5; white-space: pre-line; background: var(--bg-muted); padding: 8px; border-radius: var(--radius-sm);">{{ interview.questions_asked }}</div>
+          </div>
+          {% endif %}
+
+          {% if interview.personal_answers %}
+          <div>
+            <div style="color: var(--text-muted); font-size: 11px;">Your Answers & Code Discussion</div>
+            <div style="line-height: 1.5; white-space: pre-line;">{{ interview.personal_answers }}</div>
+          </div>
+          {% endif %}
+
+          {% if interview.areas_to_improve %}
+          <div>
+            <div style="color: var(--text-muted); font-size: 11px;">Areas to Improve / Review</div>
+            <div style="line-height: 1.5; color: var(--color-warning);">{{ interview.areas_to_improve }}</div>
+          </div>
+          {% endif %}
+
+          {% if interview.next_round_date %}
+          <div style="padding-top: 10px; border-top: 1px solid var(--border-subtle);">
+            <div style="color: var(--text-muted); font-size: 11px;">Next Round Target Date</div>
+            <div style="font-weight: 600;">{{ interview.next_round_date|date:"l, F j, Y" }}</div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

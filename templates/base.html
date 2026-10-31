@@ -1,0 +1,49 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ user_theme|default:'light' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}CareerPilot{% endblock %} — Intelligent Career CRM</title>
+  
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Core Design System CSS -->
+  <link rel="stylesheet" href="{% static 'css/main.css' %}">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  {% if request.user.is_authenticated %}
+  <div class="app-container">
+    {% include 'partials/sidebar.html' %}
+
+    <div class="main-wrapper">
+      {% include 'partials/header.html' %}
+
+      <main class="content-body">
+        {% include 'partials/messages.html' %}
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+  {% else %}
+  <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg-app); padding: 20px;">
+    <div style="width: 100%; max-width: 440px;">
+      {% include 'partials/messages.html' %}
+      {% block auth_content %}{% endblock %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Core JavaScript -->
+  <script src="{% static 'js/main.js' %}"></script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

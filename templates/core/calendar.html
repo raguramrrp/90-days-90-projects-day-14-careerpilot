@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Calendar — CareerPilot{% endblock %}
+{% block page_title %}Career Schedule & Calendar{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom: 16px; padding: 12px 18px;">
+  <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <h1 id="calendar-title" style="font-size: 17px; font-weight: 700; color: var(--text-primary); min-width: 170px;">
+        {{ today|date:"F Y" }}
+      </h1>
+      <div style="display: flex; gap: 4px;">
+        <button type="button" id="cal-prev-btn" class="btn btn-secondary btn-sm" title="Previous">&larr;</button>
+        <button type="button" id="cal-today-btn" class="btn btn-secondary btn-sm">Today</button>
+        <button type="button" id="cal-next-btn" class="btn btn-secondary btn-sm" title="Next">&rarr;</button>
+      </div>
+    </div>
+
+    <!-- View Switcher -->
+    <div style="display: flex; align-items: center; gap: 6px;">
+      <button type="button" class="btn btn-primary btn-sm cal-view-btn" data-view="month">Month</button>
+      <button type="button" class="btn btn-secondary btn-sm cal-view-btn" data-view="week">Week</button>
+      <button type="button" class="btn btn-secondary btn-sm cal-view-btn" data-view="day">Day Agenda</button>
+    </div>
+
+    <!-- Quick Add Actions -->
+    <div style="display: flex; gap: 6px;">
+      <a href="{% url 'interviews:create' %}" class="btn btn-primary btn-sm">+ Interview</a>
+      <a href="{% url 'reminders:create' %}" class="btn btn-secondary btn-sm">+ Reminder</a>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div style="display: flex; align-items: center; gap: 16px; margin-top: 12px; padding-top: 8px; border-top: 1px solid var(--border-subtle); font-size: 11px; color: var(--text-secondary); flex-wrap: wrap;">
+    <span style="font-weight: 600;">Event Types:</span>
+    <span style="display: inline-flex; align-items: center; gap: 5px;">
+      <span style="width: 10px; height: 10px; border-radius: 2px; background: #C74E58;"></span> Job Deadline
+    </span>
+    <span style="display: inline-flex; align-items: center; gap: 5px;">
+      <span style="width: 10px; height: 10px; border-radius: 2px; background: #2869C7;"></span> Interview Round
+    </span>
+    <span style="display: inline-flex; align-items: center; gap: 5px;">
+      <span style="width: 10px; height: 10px; border-radius: 2px; background: #C58A25;"></span> Reminder / Follow-up
+    </span>
+    <span style="display: inline-flex; align-items: center; gap: 5px;">
+      <span style="width: 10px; height: 10px; border-radius: 2px; background: #8B5CF6;"></span> Career Task
+    </span>
+  </div>
+</div>
+
+<!-- Dynamic Calendar Render Container -->
+<div id="calendar-container">
+  <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+    Loading scheduled career events...
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/calendar.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Past Interview Experiences & Questions — CareerPilot{% endblock %}
+{% block page_title %}Interview Experiences & Technical Questions Archive{% endblock %}
+
+{% block content %}
+<div style="max-width: 900px; margin: 0 auto;">
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+    <div>
+      <h1 style="font-size: 20px; font-weight: 700; color: var(--text-primary);">Past Interview Experiences</h1>
+      <p style="font-size: 12.5px; color: var(--text-secondary);">
+        Review actual technical questions asked, algorithms discussed, and areas of improvement across previous rounds.
+      </p>
+    </div>
+    <a href="{% url 'interviews:list' %}" class="btn btn-secondary btn-sm">All Scheduled Interviews</a>
+  </div>
+
+  {% if interviews %}
+  <div style="display: flex; flex-direction: column; gap: 16px;">
+    {% for intv in interviews %}
+    <div class="card" style="border-left: 3px solid var(--primary-accent);">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">{{ intv.application.opportunity.company.name }} &mdash; {{ intv.round_title }}</h2>
+          <div style="font-size: 11.5px; color: var(--text-secondary);">
+            {{ intv.interview_date|date:"F j, Y" }} &bull; Outcome: <strong>{{ intv.outcome }}</strong>
+            {% if intv.interviewer_names %}&bull; Interviewer: {{ intv.interviewer_names }}{% endif %}
+          </div>
+        </div>
+        <a href="{% url 'interviews:detail' intv.pk %}" class="btn btn-secondary btn-sm">Full Round &rarr;</a>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px; font-size: 12.5px;">
+        {% if intv.questions_asked %}
+        <div>
+          <div style="font-weight: 600; font-size: 11.5px; color: var(--text-secondary); margin-bottom: 2px;">
+            Questions Asked by Interviewers:
+          </div>
+          <div style="background: var(--bg-muted); padding: 10px; border-radius: var(--radius-sm); white-space: pre-line; line-height: 1.5;">
+            {{ intv.questions_asked }}
+          </div>
+        </div>
+        {% endif %}
+
+        {% if intv.personal_answers %}
+        <div>
+          <div style="font-weight: 600; font-size: 11.5px; color: var(--text-secondary); margin-bottom: 2px;">
+            Your Approach & Code Discussion:
+          </div>
+          <div style="white-space: pre-line; line-height: 1.5; color: var(--text-primary);">
+            {{ intv.personal_answers }}
+          </div>
+        </div>
+        {% endif %}
+
+        {% if intv.areas_to_improve %}
+        <div>
+          <div style="font-weight: 600; font-size: 11.5px; color: var(--color-warning); margin-bottom: 2px;">
+            Key Areas to Improve:
+          </div>
+          <div style="color: var(--text-secondary); white-space: pre-line;">
+            {{ intv.areas_to_improve }}
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="card" style="text-align: center; padding: 40px;">
+    <p style="font-size: 13.5px; color: var(--text-secondary); margin-bottom: 6px;">No past interview questions recorded yet.</p>
+    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">After completing an interview round, edit its details to save questions and learnings.</p>
+    <a href="{% url 'interviews:list' %}" class="btn btn-secondary btn-sm">View Interviews</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

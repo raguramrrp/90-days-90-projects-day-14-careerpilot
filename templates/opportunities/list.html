@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if is_saved_view %}Saved Jobs{% else %}Opportunities{% endif %} — CareerPilot{% endblock %}
+{% block page_title %}{% if is_saved_view %}Saved Job Opportunities{% else %}All Job Opportunities{% endif %}{% endblock %}
+
+{% block content %}
+<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+  <div>
+    <h1 style="font-size: 20px; font-weight: 700; color: var(--text-primary);">
+      {% if is_saved_view %}Saved Opportunities{% else %}Opportunity Discovery & Tracking{% endif %}
+    </h1>
+    <p style="font-size: 12.5px; color: var(--text-secondary);">
+      {% if is_saved_view %}Review jobs you have bookmarked before preparing applications.{% else %}Track potential job roles, eligibility requirements, and approaching deadlines.{% endif %}
+    </p>
+  </div>
+  <div style="display: flex; gap: 8px;">
+    {% if is_saved_view %}
+      <a href="{% url 'opportunities:list' %}" class="btn btn-secondary btn-sm">All Opportunities</a>
+    {% else %}
+      <a href="{% url 'opportunities:saved' %}" class="btn btn-secondary btn-sm">Saved Only</a>
+    {% endif %}
+    <a href="{% url 'opportunities:create' %}" class="btn btn-primary btn-sm">+ Add Opportunity</a>
+  </div>
+</div>
+
+<!-- Search & Filter Controls -->
+<div class="card" style="margin-bottom: 16px; padding: 12px 16px;">
+  <form method="get" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+    <div style="flex: 1; min-width: 220px;">
+      <input type="text" name="q" value="{{ current_q }}" class="form-input" placeholder="Search by role, company, skills, or location...">
+    </div>
+
+    {% if not is_saved_view %}
+    <div style="min-width: 150px;">
+      <select name="category" class="form-select" onchange="this.form.submit()">
+        <option value="">All Categories</option>
+        {% for cat_val, cat_label in categories %}
+        <option value="{{ cat_val }}" {% if current_category == cat_val %}selected{% endif %}>{{ cat_label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div style="min-width: 130px;">
+      <select name="source" class="form-select" onchange="this.form.submit()">
+        <option value="">All Sources</option>
+        {% for src_val, src_label in sources %}
+        <option value="{{ src_val }}" {% if current_source == src_val %}selected{% endif %}>{{ src_label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div style="min-width: 120px;">
+      <select name="priority" class="form-select" onchange="this.form.submit()">
+        <option value="">All Priorities</option>
+        {% for p_val, p_label in priorities %}
+        <option value="{{ p_val }}" {% if current_priority == p_val %}selected{% endif %}>{{ p_label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div style="min-width: 140px;">
+      <select name="sort" class="form-select" onchange="this.form.submit()">
+        <option value="created_desc" {% if current_sort == 'created_desc' %}selected{% endif %}>Newest First</option>
+        <option value="created_asc" {% if current_sort == 'created_asc' %}selected{% endif %}>Oldest First</option>
+        <option value="deadline_asc" {% if current_sort == 'deadline_asc' %}selected{% endif %}>Deadline (Soonest)</option>
+        <option value="company" {% if current_sort == 'company' %}selected{% endif %}>Company (A-Z)</option>
+      </select>
+    </div>
+    {% endif %}
+
+    <div style="display: flex; gap: 6px;">
+      <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+      {% if current_q or current_category or current_source or current_priority %}
+      <a href="{% if is_saved_view %}{% url 'opportunities:saved' %}{% else %}{% url 'opportunities:list' %}{% endif %}" class="btn btn-secondary btn-sm">Clear</a>
+      {% endif %}
+    </div>
+  </form>
+</div>
+
+<!-- Opportunities Data Table -->
+{% if page_obj %}
+<div class="table-responsive">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Job Title & Company</th>
+        <th>Category</th>
+        <th>Type & Mode</th>
+        <th>Salary Range</th>
+        <th>Deadline</th>
+        <th>Priority</th>
+        <th>Status</th>
+        <th style="text-align: right;">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for opp in page_obj %}
+      <tr>
+        <td>
+          <div style="font-weight: 600; font-size: 13px;">
+            <a href="{% url 'opportunities:detail' opp.pk %}" style="color: inherit; text-decoration: none;">{{ opp.title }}</a>
+          </div>
+          <div style="font-size: 11.5px; color: var(--text-secondary); margin-top: 1px;">
+            <strong>{{ opp.company.name }}</strong> &bull; {{ opp.location|default:"Location not specified" }}
+          </div>
+        </td>
+        <td>{{ opp.category }}</td>
+        <td>
+          <div style="font-size: 12px;">{{ opp.employment_type }}</div>
+          <div style="font-size: 11px; color: var(--text-muted);">{{ opp.work_mode }}</div>
+        </td>
+        <td>
+          <span style="font-size: 12px; font-weight: 500;">{{ opp.salary_display }}</span>
+        </td>
+        <td>
+          {% if opp.deadline %}
+            {% if opp.is_expired %}
+              <span class="badge badge-slate" style="text-decoration: line-through;">{{ opp.deadline|date:"M d, Y" }} (Closed)</span>
+            {% elif opp.is_deadline_approaching %}
+              <span class="badge badge-red">{{ opp.deadline|date:"M d, Y" }} (Approaching)</span>
+            {% else %}
+              <span style="font-size: 12px;">{{ opp.deadline|date:"M d, Y" }}</span>
+            {% endif %}
+          {% else %}
+            <span style="font-size: 11.5px; color: var(--text-muted);">Rolling / Open</span>
+          {% endif %}
+        </td>
+        <td>
+          <span class="badge {% if opp.priority == 'Urgent' %}badge-red{% elif opp.priority == 'High' %}badge-amber{% elif opp.priority == 'Medium' %}badge-blue{% else %}badge-slate{% endif %}">
+            {{ opp.priority }}
+          </span>
+        </td>
+        <td>
+          <span class="badge badge-slate">{{ opp.interest_status }}</span>
+        </td>
+        <td style="text-align: right; white-space: nowrap;">
+          <a href="{% url 'applications:create' %}?opportunity_id={{ opp.pk }}" class="btn btn-primary btn-sm" style="margin-right: 4px;">Track App</a>
+          <a href="{% url 'opportunities:detail' opp.pk %}" class="btn btn-secondary btn-sm" title="View Details">View</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; font-size: 12px; color: var(--text-secondary);">
+  <div>
+    Showing page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }} ({{ page_obj.paginator.count }} opportunities)
+  </div>
+  <div style="display: flex; gap: 4px;">
+    {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}&q={{ current_q }}&category={{ current_category }}&source={{ current_source }}&priority={{ current_priority }}&sort={{ current_sort }}" class="btn btn-secondary btn-sm">&larr; Previous</a>
+    {% endif %}
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}&q={{ current_q }}&category={{ current_category }}&source={{ current_source }}&priority={{ current_priority }}&sort={{ current_sort }}" class="btn btn-secondary btn-sm">Next &rarr;</a>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+{% else %}
+<div class="card" style="text-align: center; padding: 40px;">
+  <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">No opportunities found matching your filters.</p>
+  <a href="{% url 'opportunities:create' %}" class="btn btn-primary btn-sm">+ Add Opportunity</a>
+</div>
+{% endif %}
+{% endblock %}

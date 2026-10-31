@@ -1,0 +1,309 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Career Analytics — CareerPilot{% endblock %}
+{% block page_title %}Career Intelligence & Application Analytics{% endblock %}
+
+{% block content %}
+<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+  <div>
+    <h1 style="font-size: 20px; font-weight: 700; color: var(--text-primary);">Career Analytics Dashboard</h1>
+    <p style="font-size: 12.5px; color: var(--text-secondary);">
+      Performance metrics, funnel conversion rates, and sourcing insights calculated directly from database records.
+    </p>
+  </div>
+  
+  <!-- Date Filter Form -->
+  <form method="get" style="display: flex; gap: 6px; align-items: center;">
+    <input type="date" name="start_date" value="{{ start_date }}" class="form-input" style="width: 140px; font-size: 11.5px; padding: 4px 6px;">
+    <span style="font-size: 11px; color: var(--text-muted);">&ndash;</span>
+    <input type="date" name="end_date" value="{{ end_date }}" class="form-input" style="width: 140px; font-size: 11.5px; padding: 4px 6px;">
+    <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+    {% if start_date or end_date %}
+      <a href="{% url 'analytics:dashboard' %}" class="btn btn-secondary btn-sm">Reset</a>
+    {% endif %}
+  </form>
+</div>
+
+<!-- KPI Summary Cards -->
+<div class="grid-4" style="margin-bottom: 20px;">
+  <div class="kpi-card">
+    <div class="kpi-label">Total Applications</div>
+    <div class="kpi-value">{{ kpis.total_applications }}</div>
+    <div class="kpi-subtext">{{ kpis.in_progress }} in progress</div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-label">Interview Conversion</div>
+    <div class="kpi-value" style="color: var(--primary-accent);">{{ kpis.app_to_interview_rate }}%</div>
+    <div class="kpi-subtext">{{ kpis.upcoming_interviews }} upcoming round(s)</div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-label">Offer Conversion</div>
+    <div class="kpi-value" style="color: var(--color-success);">{{ kpis.offer_conversion_rate }}%</div>
+    <div class="kpi-subtext">{{ kpis.offers_received }} offers / {{ kpis.offers_accepted }} accepted</div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-label">Overdue Follow-ups</div>
+    <div class="kpi-value" style="color: {% if kpis.overdue_followups > 0 %}var(--color-danger){% else %}var(--text-primary){% endif %};">
+      {{ kpis.overdue_followups }}
+    </div>
+    <div class="kpi-subtext">{{ kpis.pending_assessments }} pending assessment(s)</div>
+  </div>
+</div>
+
+<!-- Analytical Insights Banner -->
+{% if insights %}
+<div class="card" style="margin-bottom: 20px; background: var(--bg-surface); border-left: 4px solid var(--primary-accent);">
+  <div class="card-header">
+    <h2 class="card-title">Strategy Insights & Findings</h2>
+  </div>
+  <div style="display: flex; flex-direction: column; gap: 6px;">
+    {% for ins in insights %}
+    <div style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-primary);">
+      <span style="color: var(--primary-accent); font-weight: bold;">&bull;</span>
+      <span>{{ ins }}</span>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- 10 Analytic Charts (2-Column Grid) -->
+<div class="grid-2">
+  <!-- Chart 1: Applications by Month -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">1. Applications by Month</h2>
+      <span class="card-subtitle">Monthly submission pacing</span>
+    </div>
+    <div style="height: 220px; position: relative;">
+      <canvas id="chart-by-month"></canvas>
+    </div>
+  </div>
+
+  <!-- Chart 2: Pipeline Stage Distribution -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">2. Application Pipeline Distribution</h2>
+      <span class="card-subtitle">Volume per active stage</span>
+    </div>
+    <div style="height: 220px; position: relative;">
+      <canvas id="chart-pipeline-dist"></canvas>
+    </div>
+  </div>
+
+  <!-- Chart 3: Applications by Job Category -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">3. Applications by Job Category</h2>
+      <span class="card-subtitle">Domain focus</span>
+    </div>
+    <div style="height: 220px; position: relative;">
+      <canvas id="chart-category"></canvas>
+    </div>
+  </div>
+
+  <!-- Chart 4: Applications by Employment Type -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">4. Employment Type Distribution</h2>
+      <span class="card-subtitle">Full-time vs. Internship</span>
+    </div>
+    <div style="height: 220px; position: relative;">
+      <canvas id="chart-employment"></canvas>
+    </div>
+  </div>
+
+  <!-- Chart 5: Applications by Work Mode -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">5. Work Mode Breakdown</h2>
+      <span class="card-subtitle">Remote, Hybrid, On-site</span>
+    </div>
+    <div style="height: 220px; position: relative;">
+      <canvas id="chart-work-mode"></canvas>
+    </div>
+  </div>
+
+  <!-- Chart 6: Discovery Source Distribution -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">6. Opportunity Source Yield</h2>
+      <span class="card-subtitle">LinkedIn, Referral, Campus, Portals</span>
+    </div>
+    <div style="height: 220px; position: relative;">
+      <canvas id="chart-source"></canvas>
+    </div>
+  </div>
+
+  <!-- Chart 7: Interview Outcomes -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">7. Interview Outcomes</h2>
+      <span class="card-subtitle">Scheduled vs. Advanced vs. Rejected</span>
+    </div>
+    <div style="height: 220px; position: relative;">
+      <canvas id="chart-interview-outcomes"></canvas>
+    </div>
+  </div>
+
+  <!-- Chart 8: Application Activity Trends -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">8. Monthly Activity Trends</h2>
+      <span class="card-subtitle">Submitted applications vs. interviews held</span>
+    </div>
+    <div style="height: 220px; position: relative;">
+      <canvas id="chart-activity-trend"></canvas>
+    </div>
+  </div>
+
+  <!-- Chart 9: Offer Conversion Funnel -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">9. Offer Conversion Funnel</h2>
+      <span class="card-subtitle">Stage-by-stage progression</span>
+    </div>
+    <div style="height: 220px; position: relative;">
+      <canvas id="chart-funnel"></canvas>
+    </div>
+  </div>
+
+  <!-- Chart 10: Status Health Breakdown -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">10. Pipeline Health Ratio</h2>
+      <span class="card-subtitle">Active in pipeline vs. terminal outcomes</span>
+    </div>
+    <div style="height: 220px; position: relative;">
+      <canvas id="chart-status-health"></canvas>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof Chart === 'undefined') return;
+
+  const data = {{ charts_data|safe }};
+  const primaryColor = '#2869C7';
+  const successColor = '#16856B';
+  const warningColor = '#C58A25';
+  const neutralColor = '#66758A';
+  const palette = ['#2869C7', '#16856B', '#C58A25', '#8B5CF6', '#0284C7', '#C74E58', '#475569'];
+
+  // 1. By Month
+  new Chart(document.getElementById('chart-by-month'), {
+    type: 'bar',
+    data: {
+      labels: data.apps_by_month.labels,
+      datasets: [{ label: 'Applications', data: data.apps_by_month.data, backgroundColor: primaryColor, borderRadius: 4 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+  });
+
+  // 2. Pipeline Stage Distribution
+  new Chart(document.getElementById('chart-pipeline-dist'), {
+    type: 'bar',
+    data: {
+      labels: data.pipeline_distribution.labels,
+      datasets: [{ label: 'Applications', data: data.pipeline_distribution.data, backgroundColor: primaryColor, borderRadius: 4 }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { ticks: { font: { size: 9 }, maxRotation: 45, minRotation: 45 } } }
+    }
+  });
+
+  // 3. Category
+  new Chart(document.getElementById('chart-category'), {
+    type: 'doughnut',
+    data: {
+      labels: data.category_distribution.labels,
+      datasets: [{ data: data.category_distribution.data, backgroundColor: palette }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: { size: 10.5 } } } } }
+  });
+
+  // 4. Employment Type
+  new Chart(document.getElementById('chart-employment'), {
+    type: 'pie',
+    data: {
+      labels: data.employment_type_distribution.labels,
+      datasets: [{ data: data.employment_type_distribution.data, backgroundColor: [primaryColor, successColor, warningColor, neutralColor] }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } } } }
+  });
+
+  // 5. Work Mode
+  new Chart(document.getElementById('chart-work-mode'), {
+    type: 'bar',
+    data: {
+      labels: data.work_mode_distribution.labels,
+      datasets: [{ label: 'Count', data: data.work_mode_distribution.data, backgroundColor: successColor, borderRadius: 4 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+  });
+
+  // 6. Source
+  new Chart(document.getElementById('chart-source'), {
+    type: 'bar',
+    data: {
+      labels: data.source_distribution.labels,
+      datasets: [{ label: 'Opportunities', data: data.source_distribution.data, backgroundColor: warningColor, borderRadius: 4 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+  });
+
+  // 7. Interview Outcomes
+  new Chart(document.getElementById('chart-interview-outcomes'), {
+    type: 'doughnut',
+    data: {
+      labels: data.interview_outcomes.labels,
+      datasets: [{ data: data.interview_outcomes.data, backgroundColor: palette }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } } } }
+  });
+
+  // 8. Activity Trends
+  new Chart(document.getElementById('chart-activity-trend'), {
+    type: 'line',
+    data: {
+      labels: data.activity_trend.labels,
+      datasets: [
+        { label: 'Applications', data: data.activity_trend.applications, borderColor: primaryColor, fill: false, tension: 0.2 },
+        { label: 'Interviews', data: data.activity_trend.interviews, borderColor: successColor, fill: false, tension: 0.2 }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { font: { size: 11 } } } } }
+  });
+
+  // 9. Funnel
+  new Chart(document.getElementById('chart-funnel'), {
+    type: 'bar',
+    data: {
+      labels: data.funnel.labels,
+      datasets: [{ label: 'Candidates / Stages', data: data.funnel.data, backgroundColor: primaryColor, borderRadius: 4 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+  });
+
+  // 10. Status Health
+  new Chart(document.getElementById('chart-status-health'), {
+    type: 'pie',
+    data: {
+      labels: data.status_health.labels,
+      datasets: [{ data: data.status_health.data, backgroundColor: [primaryColor, neutralColor] }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } } } }
+  });
+});
+</script>
+{% endblock %}

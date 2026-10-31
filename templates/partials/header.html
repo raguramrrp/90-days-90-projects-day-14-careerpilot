@@ -1,0 +1,62 @@
+<header class="top-header">
+  <div class="header-left">
+    <button type="button" id="mobile-sidebar-toggle" class="btn-icon" style="display: none;" title="Toggle Navigation">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" x2="21" y1="12" y2="12"/><line x1="3" x2="21" y1="6" y2="6"/><line x1="3" x2="21" y1="18" y2="18"/></svg>
+    </button>
+    <div class="page-title">{% block page_title %}Career Workspace{% endblock %}</div>
+  </div>
+
+  <div class="header-search">
+    <form action="{% url 'core:search' %}" method="get">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></svg>
+      <input type="text" name="q" id="global-search-input" placeholder="Search opportunities, apps, interviews... (Ctrl+K)" value="{{ query|default:'' }}" autocomplete="off">
+    </form>
+  </div>
+
+  <div class="header-right">
+    <!-- Quick Create Action -->
+    <div style="position: relative;">
+      <button type="button" class="btn btn-primary btn-sm" id="quick-create-btn" onclick="document.getElementById('quick-create-menu').classList.toggle('active')" style="gap: 4px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+        <span>Add</span>
+      </button>
+      <div id="quick-create-menu" class="card" style="display: none; position: absolute; right: 0; top: 38px; width: 190px; padding: 6px 0; z-index: 200; box-shadow: var(--shadow-md);">
+        <a href="{% url 'opportunities:create' %}" class="nav-item-link" style="border-radius: 0; padding: 8px 14px;">+ Opportunity</a>
+        <a href="{% url 'applications:create' %}" class="nav-item-link" style="border-radius: 0; padding: 8px 14px;">+ Application</a>
+        <a href="{% url 'interviews:create' %}" class="nav-item-link" style="border-radius: 0; padding: 8px 14px;">+ Interview Round</a>
+        <a href="{% url 'reminders:create' %}" class="nav-item-link" style="border-radius: 0; padding: 8px 14px;">+ Reminder</a>
+        <a href="{% url 'planner:task_create' %}" class="nav-item-link" style="border-radius: 0; padding: 8px 14px;">+ Career Task</a>
+        <a href="{% url 'documents:upload' %}" class="nav-item-link" style="border-radius: 0; padding: 8px 14px;">+ Upload Resume/Doc</a>
+      </div>
+    </div>
+
+    <!-- Notification Bell -->
+    <a href="{% url 'reminders:list' %}?tab=today" class="btn-icon" title="Notifications & Deadlines">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+      {% if notifications_count > 0 %}
+        <span class="badge-counter">{{ notifications_count }}</span>
+      {% endif %}
+    </a>
+
+    <!-- Theme Switcher -->
+    <button type="button" id="theme-toggle-btn" class="btn-icon" title="Toggle Light / Dark Mode">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" x2="12" y1="1" y2="3"/><line x1="12" x2="12" y1="21" y2="23"/><line x1="4.22" x2="5.64" y1="4.22" y2="5.64"/><line x1="18.36" x2="19.78" y1="18.36" y2="19.78"/><line x1="1" x2="3" y1="12" y2="12"/><line x1="21" x2="23" y1="12" y2="12"/><line x1="4.22" x2="5.64" y1="19.78" y2="18.36"/><line x1="18.36" x2="19.78" y1="5.64" y2="4.22"/></svg>
+    </button>
+  </div>
+</header>
+
+<script>
+// Close quick menu when clicking outside
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('quick-create-menu');
+  const btn = document.getElementById('quick-create-btn');
+  if (menu && btn && !btn.contains(e.target) && !menu.contains(e.target)) {
+    menu.classList.remove('active');
+    menu.style.display = 'none';
+  } else if (menu && menu.classList.contains('active')) {
+    menu.style.display = 'block';
+  } else if (menu) {
+    menu.style.display = 'none';
+  }
+});
+</script>

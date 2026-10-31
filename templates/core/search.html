@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Search: {{ query }} — CareerPilot{% endblock %}
+{% block page_title %}Global Search Results{% endblock %}
+
+{% block content %}
+<div style="max-width: 900px; margin: 0 auto;">
+  <div style="margin-bottom: 20px;">
+    <h1 style="font-size: 19px; font-weight: 700; color: var(--text-primary);">Search Results</h1>
+    <p style="font-size: 12.5px; color: var(--text-secondary);">
+      Found <strong>{{ total_matches }}</strong> matching item(s) across your career workspace for query "<em>{{ query }}</em>".
+    </p>
+  </div>
+
+  {% if total_matches == 0 %}
+  <div class="card" style="text-align: center; padding: 40px;">
+    <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">No matching records found.</p>
+    <p style="font-size: 12px; color: var(--text-muted);">Try searching for a company name, job title, interview topic, or skill keyword.</p>
+  </div>
+  {% else %}
+
+  <!-- Opportunities Matches -->
+  {% if results.opportunities %}
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Opportunities ({{ results.opportunities|length }})</h2>
+    </div>
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Company</th>
+            <th>Category</th>
+            <th>Priority</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for opp in results.opportunities %}
+          <tr>
+            <td style="font-weight: 600;">
+              <a href="{% url 'opportunities:detail' opp.pk %}" style="color: inherit; text-decoration: none;">{{ opp.title }}</a>
+            </td>
+            <td>{{ opp.company.name }}</td>
+            <td>{{ opp.category }}</td>
+            <td><span class="badge badge-slate">{{ opp.priority }}</span></td>
+            <td><a href="{% url 'opportunities:detail' opp.pk %}" class="btn btn-secondary btn-sm">View</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Applications Matches -->
+  {% if results.applications %}
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Applications ({{ results.applications|length }})</h2>
+    </div>
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Company</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Applied Date</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for app in results.applications %}
+          <tr>
+            <td style="font-weight: 600;">{{ app.opportunity.company.name }}</td>
+            <td>{{ app.opportunity.title }}</td>
+            <td><span class="badge badge-blue">{{ app.status }}</span></td>
+            <td>{{ app.application_date|date:"Y-m-d" }}</td>
+            <td><a href="{% url 'applications:detail' app.pk %}" class="btn btn-secondary btn-sm">Details</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Interviews Matches -->
+  {% if results.interviews %}
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Interviews ({{ results.interviews|length }})</h2>
+    </div>
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Company</th>
+            <th>Round</th>
+            <th>Date</th>
+            <th>Outcome</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for intv in results.interviews %}
+          <tr>
+            <td style="font-weight: 600;">{{ intv.application.opportunity.company.name }}</td>
+            <td>{{ intv.round_title }}</td>
+            <td>{{ intv.interview_date|date:"Y-m-d" }}</td>
+            <td><span class="badge badge-slate">{{ intv.outcome }}</span></td>
+            <td><a href="{% url 'interviews:detail' intv.pk %}" class="btn btn-secondary btn-sm">View Prep</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Tasks Matches -->
+  {% if results.tasks %}
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Tasks ({{ results.tasks|length }})</h2>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 6px;">
+      {% for task in results.tasks %}
+      <div style="padding: 8px 10px; background: var(--bg-muted); border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 12.5px; font-weight: 500;">{{ task.title }}</span>
+        <span class="badge badge-slate">{{ task.due_date|date:"M d" }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Documents Matches -->
+  {% if results.documents %}
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Documents ({{ results.documents|length }})</h2>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 6px;">
+      {% for doc in results.documents %}
+      <div style="padding: 8px 10px; background: var(--bg-muted); border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 12.5px; font-weight: 500;">{{ doc.title }}</span>
+        <a href="{% url 'documents:download' doc.pk %}" class="btn btn-secondary btn-sm">Download</a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% endif %}
+</div>
+{% endblock %}

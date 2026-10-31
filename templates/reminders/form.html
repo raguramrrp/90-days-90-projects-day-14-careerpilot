@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} — CareerPilot{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 680px; margin: 0 auto;">
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+    <div>
+      <h1 style="font-size: 20px; font-weight: 700; color: var(--text-primary);">{{ title }}</h1>
+      <p style="font-size: 12.5px; color: var(--text-secondary);">Configure reminder target dates, priority, and link to an application.</p>
+    </div>
+    <a href="{% url 'reminders:list' %}" class="btn btn-secondary btn-sm">Cancel</a>
+  </div>
+
+  <div class="card">
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-group">
+        <label class="form-label">Reminder Title *</label>
+        {{ form.title }}
+        {{ form.title.errors }}
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Reminder Type *</label>
+          {{ form.reminder_type }}
+          {{ form.reminder_type.errors }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Priority</label>
+          {{ form.priority }}
+          {{ form.priority.errors }}
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Due Date *</label>
+          {{ form.due_date }}
+          {{ form.due_date.errors }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Due Time (Optional)</label>
+          {{ form.due_time }}
+          {{ form.due_time.errors }}
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Related Application</label>
+          {{ form.application }}
+          {{ form.application.errors }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Related Opportunity</label>
+          {{ form.opportunity }}
+          {{ form.opportunity.errors }}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Reminder Description & Notes</label>
+        {{ form.description }}
+        {{ form.description.errors }}
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
+        <a href="{% url 'reminders:list' %}" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary">Save Reminder</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

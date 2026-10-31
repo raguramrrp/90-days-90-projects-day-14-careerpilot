@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ opportunity.title }} @ {{ opportunity.company.name }} — CareerPilot{% endblock %}
+{% block page_title %}Opportunity Details{% endblock %}
+
+{% block content %}
+<div style="max-width: 900px; margin: 0 auto;">
+  <!-- Header Bar -->
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+        <span class="badge {% if opportunity.priority == 'Urgent' %}badge-red{% elif opportunity.priority == 'High' %}badge-amber{% elif opportunity.priority == 'Medium' %}badge-blue{% else %}badge-slate{% endif %}">
+          {{ opportunity.priority }} Priority
+        </span>
+        <span class="badge badge-slate">{{ opportunity.interest_status }}</span>
+        {% if opportunity.is_deadline_approaching %}
+          <span class="badge badge-red">Deadline Approaching</span>
+        {% endif %}
+      </div>
+      <h1 style="font-size: 22px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px;">
+        {{ opportunity.title }}
+      </h1>
+      <div style="font-size: 13.5px; color: var(--text-secondary);">
+        <strong>{{ opportunity.company.name }}</strong> &bull; {{ opportunity.location|default:"Location TBD" }} &bull; {{ opportunity.work_mode }}
+        {% if opportunity.company.website %}
+          &bull; <a href="{{ opportunity.company.website }}" target="_blank" rel="noreferrer" style="color: var(--primary-accent); text-decoration: none;">Company Website &nearr;</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 8px;">
+      {% if not existing_application %}
+        <a href="{% url 'applications:create' %}?opportunity_id={{ opportunity.pk }}" class="btn btn-primary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span>Track Application</span>
+        </a>
+      {% else %}
+        <a href="{% url 'applications:detail' existing_application.pk %}" class="btn btn-primary">
+          <span>View Application [{{ existing_application.status }}] &rarr;</span>
+        </a>
+      {% endif %}
+      <a href="{% url 'opportunities:update' opportunity.pk %}" class="btn btn-secondary">Edit</a>
+      <a href="{% url 'opportunities:delete' opportunity.pk %}" class="btn btn-secondary" style="color: var(--color-danger);">Delete</a>
+    </div>
+  </div>
+
+  <!-- Status Toggle Bar -->
+  <div class="card" style="padding: 10px 14px; margin-bottom: 16px; background: var(--bg-muted); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+    <div style="font-size: 12px; color: var(--text-secondary);">
+      Update Interest Status:
+    </div>
+    <form method="post" action="{% url 'opportunities:toggle_status' opportunity.pk %}" style="display: flex; gap: 6px;">
+      {% csrf_token %}
+      <button type="submit" name="status" value="Saved" class="btn btn-sm {% if opportunity.interest_status == 'Saved' %}btn-primary{% else %}btn-secondary{% endif %}">Saved</button>
+      <button type="submit" name="status" value="Interested" class="btn btn-sm {% if opportunity.interest_status == 'Interested' %}btn-primary{% else %}btn-secondary{% endif %}">Interested</button>
+      <button type="submit" name="status" value="Not Interested" class="btn btn-sm {% if opportunity.interest_status == 'Not Interested' %}btn-primary{% else %}btn-secondary{% endif %}">Not Interested</button>
+      <button type="submit" name="status" value="Archived" class="btn btn-sm {% if opportunity.interest_status == 'Archived' %}btn-primary{% else %}btn-secondary{% endif %}">Archive</button>
+    </form>
+  </div>
+
+  <div class="grid-asymmetric">
+    <!-- Main Left Column -->
+    <div>
+      <!-- Role Details Card -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Role Specifications</h2>
+        </div>
+        <div class="grid-2" style="margin-bottom: 14px; font-size: 12.5px;">
+          <div>
+            <div style="color: var(--text-muted); font-size: 11px;">Category</div>
+            <div style="font-weight: 500;">{{ opportunity.category }}</div>
+          </div>
+          <div>
+            <div style="color: var(--text-muted); font-size: 11px;">Employment Type</div>
+            <div style="font-weight: 500;">{{ opportunity.employment_type }} ({{ opportunity.classification }})</div>
+          </div>
+          <div>
+            <div style="color: var(--text-muted); font-size: 11px;">Work Mode</div>
+            <div style="font-weight: 500;">{{ opportunity.work_mode }}</div>
+          </div>
+          <div>
+            <div style="color: var(--text-muted); font-size: 11px;">Compensation</div>
+            <div style="font-weight: 600; color: var(--color-success);">{{ opportunity.salary_display }}</div>
+          </div>
+        </div>
+
+        {% if opportunity.required_skills %}
+        <div style="margin-bottom: 14px;">
+          <div style="color: var(--text-muted); font-size: 11px; margin-bottom: 6px;">Required Skills</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+            {% for skill in opportunity.required_skills.split %}
+              <span class="badge badge-slate" style="font-size: 11.5px;">{{ skill|cut:"," }}</span>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        {% if opportunity.experience_requirements or opportunity.qualification_requirements %}
+        <div class="grid-2" style="margin-bottom: 14px; font-size: 12px;">
+          {% if opportunity.experience_requirements %}
+          <div>
+            <div style="color: var(--text-muted); font-size: 11px;">Experience</div>
+            <div>{{ opportunity.experience_requirements }}</div>
+          </div>
+          {% endif %}
+          {% if opportunity.qualification_requirements %}
+          <div>
+            <div style="color: var(--text-muted); font-size: 11px;">Qualification</div>
+            <div>{{ opportunity.qualification_requirements }}</div>
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
+
+        {% if opportunity.description %}
+        <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-subtle);">
+          <div style="color: var(--text-muted); font-size: 11px; margin-bottom: 6px;">Job Description / Summary</div>
+          <div style="font-size: 12.5px; line-height: 1.6; white-space: pre-line;">{{ opportunity.description }}</div>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Personal Notes Card -->
+      {% if opportunity.personal_notes %}
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Personal Notes & Strategy</h2>
+        </div>
+        <div style="font-size: 12.5px; line-height: 1.5; white-space: pre-line; color: var(--text-secondary);">
+          {{ opportunity.personal_notes }}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Right Sidebar Column -->
+    <div>
+      <!-- Application Link & Source -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Posting & Portal</h2>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px; font-size: 12px;">
+          <div>
+            <div style="color: var(--text-muted); font-size: 11px;">Discovery Source</div>
+            <div style="font-weight: 500;">{{ opportunity.source }}</div>
+          </div>
+
+          <div>
+            <div style="color: var(--text-muted); font-size: 11px;">Application Deadline</div>
+            <div style="font-weight: 600;">
+              {% if opportunity.deadline %}
+                {{ opportunity.deadline|date:"l, F j, Y" }}
+              {% else %}
+                Rolling / Not specified
+              {% endif %}
+            </div>
+          </div>
+
+          {% if opportunity.application_url %}
+          <div style="margin-top: 6px;">
+            <a href="{{ opportunity.application_url }}" target="_blank" rel="noreferrer" class="btn btn-secondary btn-sm" style="width: 100%;">
+              Open Official Job Portal &nearr;
+            </a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Application Tracking Status -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Application Status</h2>
+        </div>
+        {% if existing_application %}
+        <div style="font-size: 12px; display: flex; flex-direction: column; gap: 8px;">
+          <div>
+            <div style="color: var(--text-muted); font-size: 11px;">Current Stage</div>
+            <div style="font-weight: 600; color: var(--primary-accent);">{{ existing_application.status }}</div>
+          </div>
+          <div>
+            <div style="color: var(--text-muted); font-size: 11px;">Applied On</div>
+            <div>{{ existing_application.application_date|date:"M d, Y" }}</div>
+          </div>
+          <a href="{% url 'applications:detail' existing_application.pk %}" class="btn btn-primary btn-sm" style="width: 100%; margin-top: 6px;">
+            Open Application Workspace &rarr;
+          </a>
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 12px 0;">
+          <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;">Not yet applied.</p>
+          <a href="{% url 'applications:create' %}?opportunity_id={{ opportunity.pk }}" class="btn btn-primary btn-sm" style="width: 100%;">
+            Track Application Now
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

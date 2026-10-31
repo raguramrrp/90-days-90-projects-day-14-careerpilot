@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Pipeline Kanban — CareerPilot{% endblock %}
+{% block page_title %}Interactive Application Pipeline{% endblock %}
+
+{% block content %}
+<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+  <div>
+    <h1 style="font-size: 20px; font-weight: 700; color: var(--text-primary);">Pipeline Board</h1>
+    <p style="font-size: 12.5px; color: var(--text-secondary);">
+      Drag cards between columns or use the quick stage selector to update candidate application progress.
+    </p>
+  </div>
+  <div style="display: flex; gap: 8px;">
+    <a href="{% url 'applications:list' %}" class="btn btn-secondary btn-sm">Table View</a>
+    <a href="{% url 'applications:create' %}" class="btn btn-primary btn-sm">+ Track Application</a>
+  </div>
+</div>
+
+<!-- Kanban Columns Container -->
+<div class="kanban-board">
+  {% for col in columns %}
+  <div class="kanban-column">
+    <div class="kanban-header">
+      <span class="{{ col.color_class }}">{{ col.label }}</span>
+      <span class="badge badge-slate kanban-count">{{ col.count }}</span>
+    </div>
+
+    <div class="kanban-items" data-stage-key="{{ col.key }}">
+      {% for app in col.applications %}
+      <div class="kanban-card" data-app-id="{{ app.pk }}" data-current-status="{{ app.status }}">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div class="kanban-card-title">
+            <a href="{% url 'applications:detail' app.pk %}" style="color: inherit; text-decoration: none;">
+              {{ app.opportunity.company.name }}
+            </a>
+          </div>
+          <span class="badge badge-slate" style="font-size: 10px;">{{ app.opportunity.work_mode }}</span>
+        </div>
+
+        <div class="kanban-card-company">
+          {{ app.opportunity.title }}
+        </div>
+
+        {% if app.follow_up_date and app.status != 'Accepted' and app.status != 'Rejected' and app.status != 'Withdrawn' %}
+        <div style="font-size: 10.5px; color: {% if app.is_follow_up_overdue %}var(--color-danger){% else %}var(--text-muted){% endif %};">
+          Follow-up: {{ app.follow_up_date|date:"M d" }}
+        </div>
+        {% endif %}
+
+        <!-- Quick Stage Select Fallback (Accessible & Touch friendly) -->
+        <div style="margin-top: 4px;">
+          <select class="quick-status-select form-select" style="font-size: 11px; padding: 2px 4px; height: 26px;">
+            {% for col_opt in columns %}
+            <option value="{{ col_opt.key }}" {% if app.status == col_opt.key %}selected{% endif %}>&rarr; {{ col_opt.label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="kanban-card-footer">
+          <span>Applied: {{ app.application_date|date:"M d" }}</span>
+          <a href="{% url 'applications:detail' app.pk %}" style="color: var(--primary-accent); text-decoration: none; font-weight: 500;">
+            Details &rarr;
+          </a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/kanban.js' %}"></script>
+{% endblock %}

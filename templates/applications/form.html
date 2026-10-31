@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} — CareerPilot{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+    <div>
+      <h1 style="font-size: 20px; font-weight: 700; color: var(--text-primary);">{{ title }}</h1>
+      <p style="font-size: 12.5px; color: var(--text-secondary);">Link to a saved opportunity and record application details.</p>
+    </div>
+    <a href="{% url 'applications:list' %}" class="btn btn-secondary btn-sm">Cancel</a>
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+
+    {% if not form.instance.pk and form.fields.opportunity.queryset.count == 0 %}
+      <div style="background: var(--bg-muted); border: 1px solid var(--border-color); border-radius: 6px; padding: 14px 16px; margin-bottom: 16px; font-size: 13.5px; color: var(--text-secondary);">
+        <strong style="color: var(--text-primary);">Notice:</strong> All of your currently saved opportunities already have active applications tracked. You can <a href="{% url 'opportunities:create' %}" style="color: var(--primary-accent); text-decoration: underline; font-weight: 600;">add a new opportunity</a> first or update an existing application from the <a href="{% url 'applications:list' %}" style="color: var(--primary-accent); text-decoration: underline; font-weight: 600;">applications list</a>.
+      </div>
+    {% endif %}
+
+    <!-- Target Opportunity & Stage -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">1. Opportunity & Pipeline Stage</h2>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Linked Opportunity *</label>
+          {{ form.opportunity }}
+          {{ form.opportunity.errors }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Current Pipeline Stage *</label>
+          {{ form.status }}
+          {{ form.status.errors }}
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Application Date *</label>
+          {{ form.application_date }}
+          {{ form.application_date.errors }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Submission Method</label>
+          {{ form.application_method }}
+          {{ form.application_method.errors }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Resume Version & Follow-up -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">2. Resume Submitted & Follow-up Schedule</h2>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Submitted Resume Version</label>
+          {{ form.submitted_resume }}
+          <span class="form-help">Select which customized resume version you provided to this employer.</span>
+          {{ form.submitted_resume.errors }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Suggested Follow-up Target Date</label>
+          {{ form.follow_up_date }}
+          <span class="form-help">Pre-filled with your profile's preferred follow-up interval.</span>
+          {{ form.follow_up_date.errors }}
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Expected Salary / Stipend</label>
+          {{ form.expected_salary }}
+          {{ form.expected_salary.errors }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Offered Salary (if offer received)</label>
+          {{ form.offered_salary }}
+          {{ form.offered_salary.errors }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Recruiter & Referral Contacts -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">3. Contacts & Referral Context</h2>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Recruiter Name</label>
+          {{ form.recruiter_name }}
+          {{ form.recruiter_name.errors }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Recruiter Email</label>
+          {{ form.recruiter_email }}
+          {{ form.recruiter_email.errors }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Recruiter Phone</label>
+          {{ form.recruiter_phone }}
+          {{ form.recruiter_phone.errors }}
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Referral Contact Name</label>
+          {{ form.referral_name }}
+          {{ form.referral_name.errors }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Referral Notes / Relation</label>
+          {{ form.referral_details }}
+          {{ form.referral_details.errors }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Notes & Outcomes -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">4. Application Notes & Feedback</h2>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Application Notes</label>
+        {{ form.notes }}
+        {{ form.notes.errors }}
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Rejection Rationale (if applicable)</label>
+          {{ form.rejection_reason }}
+          {{ form.rejection_reason.errors }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Withdrawal Reason (if applicable)</label>
+          {{ form.withdrawal_reason }}
+          {{ form.withdrawal_reason.errors }}
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px;">
+      <a href="{% url 'applications:list' %}" class="btn btn-secondary">Cancel</a>
+      <button type="submit" class="btn btn-primary" style="padding: 8px 20px;">Save Application</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

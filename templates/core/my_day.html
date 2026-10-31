@@ -1,0 +1,225 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Day — CareerPilot{% endblock %}
+{% block page_title %}Daily Career Planner — {{ today|date:"l, F j" }}{% endblock %}
+
+{% block content %}
+<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+  <div>
+    <h1 style="font-size: 21px; font-weight: 700; color: var(--text-primary);">My Day</h1>
+    <p style="font-size: 12.5px; color: var(--text-secondary);">Your focused daily dashboard for tasks, follow-ups, interviews, and deadlines.</p>
+  </div>
+  <div style="display: flex; gap: 8px;">
+    <a href="{% url 'planner:task_create' %}?next={% url 'core:my_day' %}" class="btn btn-primary btn-sm">+ Add Today's Task</a>
+    <a href="{% url 'reminders:create' %}" class="btn btn-secondary btn-sm">+ Add Reminder</a>
+  </div>
+</div>
+
+<!-- Daily Goals Section -->
+{% if daily_goals %}
+<div class="card" style="background: var(--accent-bg); border-color: var(--primary-accent); margin-bottom: 20px;">
+  <div class="card-header" style="border-bottom-color: rgba(40,105,199,0.2);">
+    <h2 class="card-title" style="color: var(--primary-accent);">Today's Focus Goals</h2>
+    <span style="font-size: 11.5px; color: var(--text-secondary);">Calculated from actual database activity</span>
+  </div>
+  <div class="grid-3">
+    {% for goal in daily_goals %}
+    <div style="background: var(--bg-surface); padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+      <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+        <span style="font-weight: 600;">{{ goal.title }}</span>
+        <span style="font-weight: 700; color: var(--primary-accent);">{{ goal.current_progress }} / {{ goal.target_count }}</span>
+      </div>
+      <div style="width: 100%; height: 6px; background: var(--bg-muted); border-radius: 3px; overflow: hidden;">
+        <div style="width: {{ goal.progress_percentage }}%; height: 100%; background: {% if goal.is_achieved %}var(--color-success){% else %}var(--primary-accent){% endif %};"></div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<div class="grid-2">
+  <!-- Left Column: Tasks & Reminders -->
+  <div>
+    <!-- Overdue Tasks -->
+    {% if tasks_overdue %}
+    <div class="card" style="border-left: 3px solid var(--color-danger);">
+      <div class="card-header">
+        <h2 class="card-title" style="color: var(--color-danger);">Overdue Tasks</h2>
+        <span class="badge badge-red">{{ tasks_overdue|length }} Overdue</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        {% for task in tasks_overdue %}
+        <div id="task-row-{{ task.pk }}" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: var(--color-danger-bg); border-radius: var(--radius-sm);">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <input type="checkbox" class="task-toggle-checkbox form-checkbox" data-task-id="{{ task.pk }}">
+            <div>
+              <div style="font-weight: 600; font-size: 12.5px; color: var(--color-danger);">{{ task.title }}</div>
+              <div style="font-size: 11px; color: var(--text-secondary);">Due: {{ task.due_date|date:"M d" }} &bull; {{ task.category }}</div>
+            </div>
+          </div>
+          <a href="{% url 'planner:task_update' task.pk %}" class="btn btn-secondary btn-sm" style="font-size: 11px;">Reschedule</a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Today's Action Tasks -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Today's Priority Tasks</h2>
+        <span class="badge badge-blue">{{ tasks_today|length }} Scheduled</span>
+      </div>
+      {% if tasks_today %}
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        {% for task in tasks_today %}
+        <div id="task-row-{{ task.pk }}" style="display: flex; align-items: center; justify-content: space-between; padding: 10px; background: var(--bg-muted); border-radius: var(--radius-sm); {% if task.is_completed %}opacity: 0.5; text-decoration: line-through;{% endif %}">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <input type="checkbox" class="task-toggle-checkbox form-checkbox" data-task-id="{{ task.pk }}" {% if task.is_completed %}checked{% endif %}>
+            <div>
+              <div style="font-weight: 600; font-size: 12.5px;">{{ task.title }}</div>
+              <div style="font-size: 11px; color: var(--text-muted);">
+                {{ task.category }} &bull; Priority: {{ task.priority }}
+                {% if task.due_time %}&bull; Time: {{ task.due_time|time:"H:i" }}{% endif %}
+              </div>
+            </div>
+          </div>
+          <span class="badge {% if task.priority == 'Urgent' %}badge-red{% elif task.priority == 'High' %}badge-amber{% else %}badge-slate{% endif %}">
+            {{ task.priority }}
+          </span>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p style="font-size: 12px; color: var(--text-muted); padding: 14px 0; text-align: center;">No tasks set for today yet. Use "+ Add Today's Task" above.</p>
+      {% endif %}
+    </div>
+
+    <!-- Completed Tasks Today -->
+    {% if tasks_completed_today %}
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Completed Today</h2>
+        <span class="badge badge-green">{{ tasks_completed_today|length }} Done</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        {% for task in tasks_completed_today %}
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; font-size: 12px; color: var(--text-muted);">
+          <span style="text-decoration: line-through;">{{ task.title }}</span>
+          <span style="font-size: 11px;">{{ task.completed_at|date:"H:i" }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Right Column: Interviews, Follow-ups, Assessments, Saved Reviews -->
+  <div>
+    <!-- Interviews Today or Soon -->
+    <div class="card" style="border-left: 3px solid var(--primary-accent);">
+      <div class="card-header">
+        <h2 class="card-title">Interviews (Next 48 Hours)</h2>
+        <a href="{% url 'interviews:list' %}" class="btn btn-secondary btn-sm">All</a>
+      </div>
+      {% if interviews_soon %}
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        {% for intv in interviews_soon %}
+        <div style="padding: 10px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-sm);">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: 600; font-size: 13px;">{{ intv.application.opportunity.company.name }}</span>
+            <span class="badge {% if intv.is_today %}badge-red{% else %}badge-blue{% endif %}">
+              {% if intv.is_today %}TODAY{% else %}{{ intv.interview_date|date:"M d" }}{% endif %}
+            </span>
+          </div>
+          <div style="font-size: 11.5px; color: var(--text-secondary); margin-top: 2px;">
+            {{ intv.round_title }} &bull; {{ intv.mode }} {% if intv.interview_time %}at {{ intv.interview_time|time:"H:i" }}{% endif %}
+          </div>
+          <div style="margin-top: 8px; display: flex; gap: 6px;">
+            <a href="{% url 'interviews:detail' intv.pk %}" class="btn btn-primary btn-sm">Review Checklist</a>
+            {% if intv.meeting_url %}
+              <a href="{{ intv.meeting_url }}" target="_blank" rel="noreferrer" class="btn btn-secondary btn-sm">Join Call</a>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p style="font-size: 12px; color: var(--text-muted); padding: 10px 0;">No interviews in the immediate 48-hour window.</p>
+      {% endif %}
+    </div>
+
+    <!-- Follow-ups Due -->
+    <div class="card" style="border-left: 3px solid var(--color-warning);">
+      <div class="card-header">
+        <h2 class="card-title">Recruiter Follow-ups Due</h2>
+        <span class="badge badge-amber">{{ followups_due|length }} Due</span>
+      </div>
+      {% if followups_due %}
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        {% for app in followups_due %}
+        <div style="padding: 10px; background: var(--bg-muted); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: space-between;">
+          <div>
+            <div style="font-weight: 600; font-size: 12.5px;">{{ app.opportunity.company.name }} &mdash; {{ app.opportunity.title }}</div>
+            <div style="font-size: 11px; color: var(--text-secondary);">
+              Applied: {{ app.application_date|date:"M d" }} &bull; Target: {{ app.follow_up_date|date:"M d" }}
+              {% if app.recruiter_name %}&bull; Recruiter: {{ app.recruiter_name }}{% endif %}
+            </div>
+          </div>
+          <a href="{% url 'applications:detail' app.pk %}" class="btn btn-secondary btn-sm">Take Action</a>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p style="font-size: 12px; color: var(--text-muted); padding: 10px 0;">No pending recruiter follow-ups due today.</p>
+      {% endif %}
+    </div>
+
+    <!-- Pending Assessments -->
+    {% if assessments_due %}
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Active Assessments in Progress</h2>
+        <span class="badge badge-amber">{{ assessments_due|length }}</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        {% for app in assessments_due %}
+        <div style="padding: 10px; background: var(--bg-muted); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: space-between;">
+          <div>
+            <div style="font-weight: 600; font-size: 12.5px;">{{ app.opportunity.company.name }}</div>
+            <div style="font-size: 11px; color: var(--text-secondary);">{{ app.opportunity.title }} &bull; {{ app.notes|truncatechars:40 }}</div>
+          </div>
+          <a href="{% url 'applications:detail' app.pk %}" class="btn btn-primary btn-sm">Update Stage</a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Saved Opportunities to Review -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Saved Opportunities for Review</h2>
+        <a href="{% url 'opportunities:saved' %}" class="btn btn-secondary btn-sm">All Saved</a>
+      </div>
+      {% if saved_opportunities %}
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        {% for opp in saved_opportunities %}
+        <div style="padding: 8px 10px; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between;">
+          <div>
+            <div style="font-weight: 600; font-size: 12.5px;">{{ opp.title }}</div>
+            <div style="font-size: 11px; color: var(--text-secondary);">{{ opp.company.name }} &bull; {{ opp.location }}</div>
+          </div>
+          <a href="{% url 'applications:create' %}?opportunity_id={{ opp.pk }}" class="btn btn-primary btn-sm">Apply</a>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p style="font-size: 12px; color: var(--text-muted); padding: 8px 0;">No saved opportunities waiting for application.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

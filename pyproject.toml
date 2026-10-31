@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "careerpilot"
+version = "1.0.0"
+description = "Intelligent Career & Job Application Management System — Day 14 of 90 Days 90 Projects Challenge"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "Ragu Ram P", email = "raguramrrp@gmail.com" }
+]
+keywords = [
+    "django",
+    "career-management",
+    "job-application-tracker",
+    "kanban-pipeline",
+    "interview-preparation",
+    "crm",
+    "career-analytics",
+    "python"
+]
+dependencies = [
+    "Django>=5.1.0,<5.2.0",
+    "dj-database-url>=2.2.0",
+    "pandas>=2.2.0",
+    "openpyxl>=3.1.2",
+    "Pillow>=10.4.0",
+    "python-dotenv>=1.0.1",
+    "pytest>=8.3.0",
+    "pytest-django>=4.9.0",
+]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+python_files = ["tests.py", "test_*.py", "*_tests.py"]

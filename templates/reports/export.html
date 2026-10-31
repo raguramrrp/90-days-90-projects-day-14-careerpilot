@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Reports & Data Exports — CareerPilot{% endblock %}
+{% block page_title %}Reports & Exports Center{% endblock %}
+
+{% block content %}
+<div style="max-width: 860px; margin: 0 auto;">
+  <div style="margin-bottom: 20px;">
+    <h1 style="font-size: 20px; font-weight: 700; color: var(--text-primary);">Reports & Data Exports</h1>
+    <p style="font-size: 12.5px; color: var(--text-secondary);">
+      Export comprehensive spreadsheets in CSV and Microsoft Excel (.xlsx) formats. All exported data strictly belongs to your authenticated user account.
+    </p>
+  </div>
+
+  <div class="grid-2">
+    <!-- Application Export Card -->
+    <div class="card" style="border-top: 3px solid var(--primary-accent);">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">Job Applications Report</h2>
+          <span class="card-subtitle">{{ total_apps }} total record(s)</span>
+        </div>
+      </div>
+      <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 14px;">
+        Includes company names, job titles, pipeline stages, applied dates, recruiter contacts, referral names, salary details, and notes.
+      </p>
+      <div style="display: flex; gap: 8px;">
+        <a href="{% url 'reports:export_applications_csv' %}" class="btn btn-secondary btn-sm">Download CSV</a>
+        <a href="{% url 'reports:export_applications_excel' %}" class="btn btn-primary btn-sm">Download Excel (.xlsx)</a>
+      </div>
+    </div>
+
+    <!-- Opportunities Export Card -->
+    <div class="card" style="border-top: 3px solid var(--color-success);">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">Opportunities Discovery Report</h2>
+          <span class="card-subtitle">{{ total_opps }} saved opportunity record(s)</span>
+        </div>
+      </div>
+      <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 14px;">
+        Complete breakdown of tracked opportunities: categories, required skills, salary ranges, deadlines, sources, and status.
+      </p>
+      <div style="display: flex; gap: 8px;">
+        <a href="{% url 'reports:export_opportunities_csv' %}" class="btn btn-secondary btn-sm">Download CSV</a>
+        <a href="{% url 'reports:export_opportunities_excel' %}" class="btn btn-primary btn-sm">Download Excel (.xlsx)</a>
+      </div>
+    </div>
+
+    <!-- Interviews Export Card -->
+    <div class="card" style="border-top: 3px solid var(--color-warning);">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">Interviews & Debrief Report</h2>
+          <span class="card-subtitle">{{ total_ints }} interview round(s)</span>
+        </div>
+      </div>
+      <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 14px;">
+        Export all past and scheduled interview rounds, interviewer details, feedback, specific questions asked, and prep notes.
+      </p>
+      <div>
+        <a href="{% url 'reports:export_interviews_csv' %}" class="btn btn-primary btn-sm">Download CSV</a>
+      </div>
+    </div>
+
+    <!-- Career Activity Summary -->
+    <div class="card" style="border-top: 3px solid var(--text-secondary);">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">Workspace Data Governance</h2>
+          <span class="card-subtitle">Zero data leakage guarantee</span>
+        </div>
+      </div>
+      <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 14px;">
+        Data exports are generated dynamically on-demand from the database using server-side filtering. No confidential candidate files are stored in public cloud caches.
+      </p>
+      <div style="font-size: 11px; color: var(--text-muted);">
+        Authenticated as: <strong>{{ request.user.username }}</strong>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

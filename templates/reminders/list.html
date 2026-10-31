@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Reminders & Follow-up Center — CareerPilot{% endblock %}
+{% block page_title %}Reminders & Follow-up Center{% endblock %}
+
+{% block content %}
+<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+  <div>
+    <h1 style="font-size: 20px; font-weight: 700; color: var(--text-primary);">Reminders & Follow-ups</h1>
+    <p style="font-size: 12.5px; color: var(--text-secondary);">Stay on top of recruiter follow-ups, test deadlines, and document submissions.</p>
+  </div>
+  <a href="{% url 'reminders:create' %}" class="btn btn-primary btn-sm">+ Create Reminder</a>
+</div>
+
+<!-- Navigation Tabs -->
+<div class="card" style="margin-bottom: 16px; padding: 6px 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+  <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+    <a href="?tab=upcoming" class="btn btn-sm {% if tab == 'upcoming' %}btn-primary{% else %}btn-secondary{% endif %}">
+      Upcoming ({{ counts.upcoming }})
+    </a>
+    <a href="?tab=today" class="btn btn-sm {% if tab == 'today' %}btn-primary{% else %}btn-secondary{% endif %}">
+      Today ({{ counts.today }})
+    </a>
+    <a href="?tab=overdue" class="btn btn-sm {% if tab == 'overdue' %}btn-danger{% else %}btn-secondary{% endif %}">
+      Overdue ({{ counts.overdue }})
+    </a>
+    <a href="?tab=completed" class="btn btn-sm {% if tab == 'completed' %}btn-primary{% else %}btn-secondary{% endif %}">
+      Completed ({{ counts.completed }})
+    </a>
+    <a href="?tab=all" class="btn btn-sm {% if tab == 'all' %}btn-primary{% else %}btn-secondary{% endif %}">
+      All ({{ counts.all }})
+    </a>
+  </div>
+
+  <!-- Priority & Type Filter -->
+  <form method="get" style="display: flex; gap: 6px; align-items: center;">
+    <input type="hidden" name="tab" value="{{ tab }}">
+    <select name="type" class="form-select" style="font-size: 11.5px; padding: 4px 8px; width: 170px;" onchange="this.form.submit()">
+      <option value="">All Types</option>
+      {% for t_val, t_label in types %}
+      <option value="{{ t_val }}" {% if current_type == t_val %}selected{% endif %}>{{ t_label }}</option>
+      {% endfor %}
+    </select>
+
+    <select name="priority" class="form-select" style="font-size: 11.5px; padding: 4px 8px; width: 120px;" onchange="this.form.submit()">
+      <option value="">All Priorities</option>
+      {% for p_val, p_label in priorities %}
+      <option value="{{ p_val }}" {% if current_priority == p_val %}selected{% endif %}>{{ p_label }}</option>
+      {% endfor %}
+    </select>
+  </form>
+</div>
+
+<!-- Reminders List -->
+{% if reminders %}
+<div class="card" style="padding: 0; overflow: hidden;">
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th style="width: 40px; text-align: center;">Done</th>
+          <th>Reminder Title</th>
+          <th>Type</th>
+          <th>Due Date</th>
+          <th>Priority</th>
+          <th>Linked Context</th>
+          <th style="text-align: right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for rem in reminders %}
+        <tr id="reminder-row-{{ rem.pk }}" style="{% if rem.is_completed %}opacity: 0.55; text-decoration: line-through;{% endif %}">
+          <td style="text-align: center;">
+            <input type="checkbox" class="reminder-toggle-checkbox form-checkbox" data-reminder-id="{{ rem.pk }}" {% if rem.is_completed %}checked{% endif %}>
+          </td>
+          <td>
+            <div style="font-weight: 600; font-size: 12.5px;">{{ rem.title }}</div>
+            {% if rem.description %}
+            <div style="font-size: 11px; color: var(--text-secondary); margin-top: 1px;">{{ rem.description|truncatechars:65 }}</div>
+            {% endif %}
+          </td>
+          <td><span class="badge badge-slate">{{ rem.reminder_type }}</span></td>
+          <td>
+            <div style="font-weight: 500;">
+              {% if rem.is_overdue %}
+                <span style="color: var(--color-danger); font-weight: 600;">{{ rem.due_date|date:"M d, Y" }} (Overdue)</span>
+              {% elif rem.is_due_today %}
+                <span class="badge badge-red">TODAY</span>
+              {% else %}
+                {{ rem.due_date|date:"M d, Y" }}
+              {% endif %}
+            </div>
+            {% if rem.due_time %}
+            <div style="font-size: 10.5px; color: var(--text-muted);">{{ rem.due_time|time:"H:i" }}</div>
+            {% endif %}
+          </td>
+          <td>
+            <span class="badge {% if rem.priority == 'Urgent' %}badge-red{% elif rem.priority == 'High' %}badge-amber{% elif rem.priority == 'Medium' %}badge-blue{% else %}badge-slate{% endif %}">
+              {{ rem.priority }}
+            </span>
+          </td>
+          <td>
+            {% if rem.application %}
+              <a href="{% url 'applications:detail' rem.application.pk %}" style="color: var(--primary-accent); text-decoration: none; font-size: 11.5px;">
+                {{ rem.application.opportunity.company.name }} &rarr;
+              </a>
+            {% elif rem.opportunity %}
+              <a href="{% url 'opportunities:detail' rem.opportunity.pk %}" style="color: var(--primary-accent); text-decoration: none; font-size: 11.5px;">
+                {{ rem.opportunity.company.name }} &rarr;
+              </a>
+            {% else %}
+              <span style="color: var(--text-muted); font-size: 11px;">General Reminder</span>
+            {% endif %}
+          </td>
+          <td style="text-align: right; white-space: nowrap;">
+            <a href="{% url 'reminders:update' rem.pk %}" class="btn btn-secondary btn-sm" style="margin-right: 4px;">Edit</a>
+            <a href="{% url 'reminders:delete' rem.pk %}" class="btn btn-secondary btn-sm" style="color: var(--color-danger);">Delete</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="card" style="text-align: center; padding: 40px;">
+  <p style="font-size: 13.5px; color: var(--text-secondary); margin-bottom: 6px;">No reminders found in this tab.</p>
+  <a href="{% url 'reminders:create' %}" class="btn btn-primary btn-sm">+ Create Reminder</a>
+</div>
+{% endif %}
+{% endblock %}

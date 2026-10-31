@@ -1,0 +1,304 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ application.opportunity.company.name }} — {{ application.opportunity.title }} — CareerPilot{% endblock %}
+{% block page_title %}Application Details{% endblock %}
+
+{% block content %}
+<div style="max-width: 950px; margin: 0 auto;">
+  <!-- Header Bar -->
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+        <span class="badge {% if application.status == 'Offer Received' or application.status == 'Accepted' %}badge-green{% elif application.status == 'Rejected' or application.status == 'Withdrawn' %}badge-red{% else %}badge-blue{% endif %}" style="font-size: 12px; padding: 3px 8px;">
+          Stage: {{ application.status }}
+        </span>
+        <span class="badge badge-slate">Applied via {{ application.application_method }}</span>
+        {% if application.is_follow_up_overdue %}
+          <span class="badge badge-amber">Follow-up Overdue</span>
+        {% endif %}
+      </div>
+
+      <h1 style="font-size: 22px; font-weight: 700; color: var(--text-primary); margin-bottom: 3px;">
+        {{ application.opportunity.company.name }}
+      </h1>
+      <div style="font-size: 13.5px; color: var(--text-secondary);">
+        {{ application.opportunity.title }} &bull; Applied on {{ application.application_date|date:"F j, Y" }}
+        &bull; <a href="{% url 'opportunities:detail' application.opportunity.pk %}" style="color: var(--primary-accent); text-decoration: none;">View Opportunity &nearr;</a>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 8px;">
+      <a href="{% url 'interviews:create' %}?application_id={{ application.pk }}" class="btn btn-primary btn-sm">+ Schedule Interview</a>
+      <a href="{% url 'applications:update' application.pk %}" class="btn btn-secondary btn-sm">Edit</a>
+      <a href="{% url 'applications:delete' application.pk %}" class="btn btn-secondary btn-sm" style="color: var(--color-danger);">Delete</a>
+    </div>
+  </div>
+
+  <!-- Stage Change Selector Bar -->
+  <div class="card" style="padding: 12px 16px; margin-bottom: 20px; background: var(--bg-muted); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+    <div style="font-size: 12.5px; font-weight: 600; color: var(--text-primary);">
+      Advance / Change Application Stage:
+    </div>
+    <div style="display: flex; gap: 8px; align-items: center;">
+      <select id="stage-change-select" class="form-select" style="font-size: 12px; width: 220px;">
+        {% for s_val, s_label in status_choices %}
+        <option value="{{ s_val }}" {% if application.status == s_val %}selected{% endif %}>{{ s_label }}</option>
+        {% endfor %}
+      </select>
+      <button type="button" id="stage-change-btn" class="btn btn-primary btn-sm">Update Stage</button>
+    </div>
+  </div>
+
+  <div class="grid-asymmetric">
+    <!-- Left Column: Application Details, Notes & History -->
+    <div>
+      <!-- Core Information Card -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Application Specifics</h2>
+        </div>
+        <div class="grid-2" style="font-size: 12.5px; margin-bottom: 14px;">
+          <div>
+            <div style="color: var(--text-muted); font-size: 11px;">Submitted Resume</div>
+            <div>
+              {% if application.submitted_resume %}
+                <a href="{% url 'documents:download' application.submitted_resume.pk %}" style="color: var(--primary-accent); font-weight: 600; text-decoration: none;">
+                  {{ application.submitted_resume.title }}
+                </a>
+                <span style="font-size: 11px; color: var(--text-muted);">({{ application.submitted_resume.resume_category }})</span>
+              {% else %}
+                <span style="color: var(--text-muted);">Default Resume</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <div>
+            <div style="color: var(--text-muted); font-size: 11px;">Follow-up Target Date</div>
+            <div style="font-weight: 500;">
+              {% if application.follow_up_date %}
+                {{ application.follow_up_date|date:"l, M d, Y" }}
+              {% else %}
+                Not set
+              {% endif %}
+            </div>
+          </div>
+
+          <div>
+            <div style="color: var(--text-muted); font-size: 11px;">Expected Compensation</div>
+            <div>
+              {% if application.expected_salary %}
+                INR {{ application.expected_salary|floatformat:0 }}
+              {% else %}
+                {{ application.opportunity.salary_display }}
+              {% endif %}
+            </div>
+          </div>
+
+          <div>
+            <div style="color: var(--text-muted); font-size: 11px;">Offered Compensation</div>
+            <div style="font-weight: 600; color: var(--color-success);">
+              {% if application.offered_salary %}
+                INR {{ application.offered_salary|floatformat:0 }}
+              {% else %}
+                Pending offer discussion
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        {% if application.recruiter_name or application.recruiter_email or application.recruiter_phone or application.referral_name %}
+        <div style="padding-top: 12px; border-top: 1px solid var(--border-subtle); margin-top: 10px;">
+          <div style="color: var(--text-muted); font-size: 11px; margin-bottom: 6px;">Recruiter & Referral Contacts</div>
+          <div class="grid-2" style="font-size: 12px;">
+            {% if application.recruiter_name %}
+            <div><strong>Recruiter:</strong> {{ application.recruiter_name }}</div>
+            {% endif %}
+            {% if application.recruiter_email %}
+            <div><strong>Email:</strong> <a href="mailto:{{ application.recruiter_email }}" style="color: var(--primary-accent);">{{ application.recruiter_email }}</a></div>
+            {% endif %}
+            {% if application.recruiter_phone %}
+            <div><strong>Phone:</strong> {{ application.recruiter_phone }}</div>
+            {% endif %}
+            {% if application.referral_name %}
+            <div><strong>Referral:</strong> {{ application.referral_name }}</div>
+            {% endif %}
+          </div>
+          {% if application.referral_details %}
+          <div style="font-size: 11.5px; color: var(--text-secondary); margin-top: 4px;">{{ application.referral_details }}</div>
+          {% endif %}
+        </div>
+        {% endif %}
+
+        {% if application.rejection_reason or application.withdrawal_reason %}
+        <div style="padding-top: 12px; border-top: 1px solid var(--border-subtle); margin-top: 12px;">
+          {% if application.rejection_reason %}
+          <div style="color: var(--color-danger); font-size: 12px; margin-bottom: 4px;">
+            <strong>Rejection Rationale / Feedback:</strong> {{ application.rejection_reason }}
+          </div>
+          {% endif %}
+          {% if application.withdrawal_reason %}
+          <div style="color: var(--text-muted); font-size: 12px;">
+            <strong>Withdrawal Reason:</strong> {{ application.withdrawal_reason }}
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
+
+        {% if application.notes %}
+        <div style="padding-top: 12px; border-top: 1px solid var(--border-subtle); margin-top: 12px;">
+          <div style="color: var(--text-muted); font-size: 11px; margin-bottom: 4px;">Initial Application Notes</div>
+          <div style="font-size: 12px; color: var(--text-secondary); white-space: pre-line;">{{ application.notes }}</div>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Application Status History Timeline -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Stage Progression History</h2>
+        </div>
+        {% if status_history %}
+        <div style="display: flex; flex-direction: column; gap: 12px; position: relative; padding-left: 14px; border-left: 2px solid var(--border);">
+          {% for hist in status_history %}
+          <div style="position: relative;">
+            <div style="position: absolute; left: -19px; top: 4px; width: 8px; height: 8px; border-radius: 50%; background: var(--primary-accent);"></div>
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+              <span style="font-weight: 600; font-size: 12.5px; color: var(--text-primary);">
+                {% if hist.previous_status != 'None' %}{{ hist.previous_status }} &rarr; {% endif %}{{ hist.new_status }}
+              </span>
+              <span style="font-size: 11px; color: var(--text-muted);">{{ hist.changed_at|date:"M d, Y H:i" }}</span>
+            </div>
+            {% if hist.notes %}
+            <div style="font-size: 11.5px; color: var(--text-secondary); margin-top: 2px;">{{ hist.notes }}</div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p style="font-size: 12px; color: var(--text-muted);">No stage updates recorded yet.</p>
+        {% endif %}
+      </div>
+
+      <!-- Notes Log & Add Note Form -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Notes Log</h2>
+        </div>
+        {% if notes %}
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;">
+          {% for note in notes %}
+          <div style="padding: 10px; background: var(--bg-muted); border-radius: var(--radius-sm); font-size: 12px;">
+            <div style="color: var(--text-primary); white-space: pre-line;">{{ note.note_text }}</div>
+            <div style="font-size: 10.5px; color: var(--text-muted); margin-top: 4px;">{{ note.created_at|date:"M d, Y H:i" }}</div>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="post" action="{% url 'applications:add_note' application.pk %}">
+          {% csrf_token %}
+          <div class="form-group">
+            <label class="form-label">Add Note</label>
+            {{ note_form.note_text }}
+          </div>
+          <div style="display: flex; justify-content: flex-end;">
+            <button type="submit" class="btn btn-secondary btn-sm">Post Note</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Right Column: Interviews & Reminders -->
+    <div>
+      <!-- Linked Interviews -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Interview Rounds</h2>
+          <a href="{% url 'interviews:create' %}?application_id={{ application.pk }}" class="btn btn-secondary btn-sm">+ Round</a>
+        </div>
+        {% if interviews %}
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          {% for intv in interviews %}
+          <div style="padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-surface);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <span style="font-weight: 600; font-size: 12.5px;">{{ intv.round_title }}</span>
+              <span class="badge badge-slate" style="font-size: 10px;">{{ intv.outcome }}</span>
+            </div>
+            <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">
+              Date: {{ intv.interview_date|date:"M d" }} &bull; {{ intv.mode }}
+            </div>
+            <div style="margin-top: 6px; display: flex; justify-content: flex-end;">
+              <a href="{% url 'interviews:detail' intv.pk %}" class="btn btn-secondary btn-sm" style="font-size: 11px; padding: 2px 6px;">Prep Checklist &rarr;</a>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p style="font-size: 12px; color: var(--text-muted); padding: 8px 0;">No interview rounds scheduled yet.</p>
+        {% endif %}
+      </div>
+
+      <!-- Linked Reminders -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Application Reminders</h2>
+          <a href="{% url 'reminders:create' %}" class="btn btn-secondary btn-sm">+ Reminder</a>
+        </div>
+        {% if reminders %}
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          {% for rem in reminders %}
+          <div style="padding: 8px 10px; background: var(--bg-muted); border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center; {% if rem.is_completed %}opacity: 0.5; text-decoration: line-through;{% endif %}">
+            <div>
+              <div style="font-weight: 500; font-size: 12px;">{{ rem.title }}</div>
+              <div style="font-size: 10.5px; color: var(--text-muted);">Due: {{ rem.due_date|date:"M d" }}</div>
+            </div>
+            <span class="badge {% if rem.is_completed %}badge-green{% elif rem.is_overdue %}badge-red{% else %}badge-slate{% endif %}" style="font-size: 10px;">
+              {% if rem.is_completed %}Done{% elif rem.is_overdue %}Overdue{% else %}Pending{% endif %}
+            </span>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p style="font-size: 12px; color: var(--text-muted); padding: 8px 0;">No active reminders for this application.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const stageBtn = document.getElementById('stage-change-btn');
+  const stageSelect = document.getElementById('stage-change-select');
+  if (stageBtn && stageSelect) {
+    stageBtn.addEventListener('click', async () => {
+      const newStatus = stageSelect.value;
+      const notes = prompt(`Optional note for moving to '${newStatus}':`, `Advanced to ${newStatus}`);
+      if (notes === null) return;
+
+      try {
+        const res = await fetch("{% url 'applications:update_status_api' application.pk %}", {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+          },
+          body: JSON.stringify({ status: newStatus, notes: notes })
+        });
+        const data = await res.json();
+        if (data.success) {
+          window.location.reload();
+        } else {
+          alert('Failed to update stage: ' + (data.error || 'Server error'));
+        }
+      } catch (e) {
+        alert('Server error updating stage.');
+      }
+    });
+  }
+});
+</script>
+{% endblock %}

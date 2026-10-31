@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} — CareerPilot{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 650px; margin: 0 auto;">
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+    <div>
+      <h1 style="font-size: 20px; font-weight: 700; color: var(--text-primary);">{{ title }}</h1>
+      <p style="font-size: 12.5px; color: var(--text-secondary);">Set weekly or daily targets that track real completed activities.</p>
+    </div>
+    <a href="{% url 'planner:task_list' %}" class="btn btn-secondary btn-sm">Cancel</a>
+  </div>
+
+  <div class="card">
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Goal Cadence *</label>
+          {{ form.goal_type }}
+          {{ form.goal_type.errors }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Activity Category *</label>
+          {{ form.category }}
+          {{ form.category.errors }}
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Goal Title *</label>
+          {{ form.title }}
+          {{ form.title.errors }}
+        </div>
+        <div class="form-group" style="max-width: 140px;">
+          <label class="form-label">Target Count *</label>
+          {{ form.target_count }}
+          {{ form.target_count.errors }}
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Period Start Date *</label>
+          {{ form.period_start_date }}
+          {{ form.period_start_date.errors }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Period End Date *</label>
+          {{ form.period_end_date }}
+          {{ form.period_end_date.errors }}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Notes & Execution Strategy</label>
+        {{ form.notes }}
+        {{ form.notes.errors }}
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
+        <a href="{% url 'planner:task_list' %}" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary">Save Goal</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

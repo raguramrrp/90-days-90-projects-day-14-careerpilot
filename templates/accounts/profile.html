@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Profile & Preferences — CareerPilot{% endblock %}
+{% block page_title %}Candidate Profile & Career Preferences{% endblock %}
+
+{% block content %}
+<div style="max-width: 860px; margin: 0 auto;">
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+    <div>
+      <h1 style="font-size: 20px; font-weight: 700; color: var(--text-primary);">Profile & Preferences</h1>
+      <p style="font-size: 12.5px; color: var(--text-secondary);">Manage your contact details, target job roles, preferred salary, and reminder rules.</p>
+    </div>
+    <a href="{% url 'accounts:password_change' %}" class="btn btn-secondary btn-sm">Change Password</a>
+  </div>
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    
+    <!-- Account Information -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Account & Contact</h2>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">First Name</label>
+          {{ u_form.first_name }}
+          {{ u_form.first_name.errors }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Last Name</label>
+          {{ u_form.last_name }}
+          {{ u_form.last_name.errors }}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          {{ u_form.email }}
+          {{ u_form.email.errors }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone</label>
+          {{ p_form.phone }}
+          {{ p_form.phone.errors }}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Current Location</label>
+          {{ p_form.location }}
+          {{ p_form.location.errors }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Professional Headline</label>
+          {{ p_form.headline }}
+          {{ p_form.headline.errors }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Career Preferences & Job Targeting -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Job Targeting & Preferences</h2>
+        <span class="card-subtitle">Used by the recommendation engine to match opportunities</span>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Target Job Roles</label>
+        {{ p_form.preferred_roles }}
+        <span class="form-help">Comma-separated titles (e.g. Software Engineer, Machine Learning Engineer, Backend Developer)</span>
+        {{ p_form.preferred_roles.errors }}
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Preferred Locations</label>
+          {{ p_form.preferred_locations }}
+          {{ p_form.preferred_locations.errors }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Work Mode</label>
+          {{ p_form.preferred_work_modes }}
+          {{ p_form.preferred_work_modes.errors }}
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Employment Type</label>
+          {{ p_form.preferred_employment_types }}
+          {{ p_form.preferred_employment_types.errors }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Expected Salary / Stipend</label>
+          {{ p_form.expected_salary }}
+          {{ p_form.expected_salary.errors }}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Preferred Industries</label>
+        {{ p_form.preferred_industries }}
+        {{ p_form.preferred_industries.errors }}
+      </div>
+    </div>
+
+    <!-- Skills & Career Goals -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Skill Profile & Career Objectives</h2>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Technical Skills Profile</label>
+        {{ p_form.skill_profile }}
+        <span class="form-help">Comma-separated skills (e.g. Python, Django, PostgreSQL, PyTorch, React, Git, Docker)</span>
+        {{ p_form.skill_profile.errors }}
+      </div>
+      {% if profile.skills_list %}
+      <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px;">
+        {% for skill in profile.skills_list %}
+          <span class="badge badge-slate" style="font-size: 11.5px; padding: 3px 8px;">{{ skill }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <div class="form-group">
+        <label class="form-label">Career Objectives</label>
+        {{ p_form.career_goals }}
+        {{ p_form.career_goals.errors }}
+      </div>
+    </div>
+
+    <!-- Workflow Rules & Theme -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Workspace Configuration</h2>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Default Follow-up Period (Days)</label>
+          {{ p_form.follow_up_default_days }}
+          <span class="form-help">Days after applying before CareerPilot suggests following up with the recruiter.</span>
+          {{ p_form.follow_up_default_days.errors }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Theme Mode</label>
+          {{ p_form.theme }}
+          {{ p_form.theme.errors }}
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px;">
+      <a href="{% url 'core:overview' %}" class="btn btn-secondary">Cancel</a>
+      <button type="submit" class="btn btn-primary" style="padding: 8px 18px;">Save Profile Changes</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

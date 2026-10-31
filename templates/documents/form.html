@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} — CareerPilot{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 650px; margin: 0 auto;">
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+    <div>
+      <h1 style="font-size: 20px; font-weight: 700; color: var(--text-primary);">{{ title }}</h1>
+      <p style="font-size: 12.5px; color: var(--text-secondary);">Upload resume files (PDF, DOCX) or manage document metadata.</p>
+    </div>
+    <a href="{% url 'documents:list' %}" class="btn btn-secondary btn-sm">Cancel</a>
+  </div>
+
+  <div class="card">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label class="form-label">Document Title *</label>
+        {{ form.title }}
+        {{ form.title.errors }}
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Document Type *</label>
+          {{ form.document_type }}
+          {{ form.document_type.errors }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Target Specialization / Category</label>
+          {{ form.resume_category }}
+          {{ form.resume_category.errors }}
+        </div>
+      </div>
+
+      {% if form.file %}
+      <div class="form-group">
+        <label class="form-label">Select File *</label>
+        {{ form.file }}
+        <span class="form-help">Supported formats: PDF, DOCX, DOC, TXT, PNG, JPG (Max 5MB).</span>
+        {{ form.file.errors }}
+      </div>
+      {% endif %}
+
+      <div class="form-group">
+        <label class="form-label">Description & Customization Notes</label>
+        {{ form.description }}
+        {{ form.description.errors }}
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
+        <a href="{% url 'documents:list' %}" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary">Save Document</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
