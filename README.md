@@ -7,7 +7,7 @@
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=flat&logo=python&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Ready-336791?style=flat&logo=postgresql&logoColor=white)
 ![Chart.js](https://img.shields.io/badge/Chart.js-Analytics-FF6384?style=flat&logo=chartdotjs&logoColor=white)
-![Tests](https://img.shields.io/badge/Tests-32%20Passed%20(100%25)-16856B?style=flat)
+![Tests](https://img.shields.io/badge/Tests-34%20Passed%20(100%25)-16856B?style=flat)
 ![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat)
 
 ---
@@ -202,7 +202,7 @@ erDiagram
 - **Visualization:** Chart.js 4.4 (10 responsive charts with full offline resilience)
 - **Data Processing & Export:** Pandas, OpenPyXL (Excel `.xlsx` generation), Python `csv`
 - **File Handling:** Pillow, Django File Storage with extension and size validation
-- **Testing:** Django TestCase (32 automated unit, integration, and security tests)
+- **Testing:** Django TestCase (34 automated unit, integration, and security tests)
 
 ---
 
@@ -359,15 +359,15 @@ The test suite thoroughly verifies authentication, forms, business logic, multi-
 
 ### Actual Test Execution Output:
 ```
-Found 32 test(s).
+Found 34 test(s).
 System check identified no issues (0 silenced).
-................................
+..................................
 ----------------------------------------------------------------------
-Ran 32 tests in 12.165s
+Ran 34 tests in 18.600s
 
 OK
 ```
-**Status: 32/32 PASSED (100% PASS RATE)**
+**Status: 34/34 PASSED (100% PASS RATE)**
 
 ---
 
